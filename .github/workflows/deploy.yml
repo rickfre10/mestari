@@ -1,0 +1,70 @@
+# .github/workflows/deploy.yml
+
+# Nome do Workflow (aparece na aba Actions do GitHub)
+name: Deploy Vue App to GitHub Pages
+
+# Gatilhos: Quando esta Action deve rodar?
+on:
+  # Roda automaticamente em pushes para o branch 'main'
+  push:
+    branches: [ main ]
+  # Permite rodar manualmente pela interface do GitHub (aba Actions)
+  workflow_dispatch:
+
+# Permissões: Define as permissões que o GITHUB_TOKEN terá.
+# 'contents: write' é necessário para a Action poder fazer push no branch gh-pages.
+permissions:
+  contents: write
+
+# Trabalhos: Define as tarefas que a Action executará.
+jobs:
+  # Nome do job (pode ser qualquer nome)
+  deploy:
+    # Ambiente: Usa a versão mais recente do Ubuntu disponível no GitHub Actions
+    runs-on: ubuntu-latest
+
+    # Passos: Sequência de tarefas a serem executadas
+    steps:
+      # 1. Checkout do Código: Baixa o código do seu repositório para o ambiente da Action
+      - name: Checkout repository
+        uses: actions/checkout@v4 # Usa a action oficial 'checkout' na versão 4
+
+      # 2. Configurar Node.js: Instala a versão especificada do Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4 # Usa a action oficial 'setup-node' na versão 4
+        with:
+          node-version: 18 # Ou 20, ou outra versão LTS que seu projeto use
+
+      # 3. Cache de Dependências (Opcional, mas recomendado para velocidade)
+      #    Guarda a pasta node_modules para não ter que baixar tudo sempre.
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm # Caminho onde o npm guarda o cache
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # 4. Instalar Dependências: Roda 'npm ci' que é mais rápido e seguro para CI/CD
+      #    Usa o package-lock.json para garantir as mesmas versões.
+      - name: Install dependencies
+        run: npm ci
+
+      # 5. Build do Projeto: Executa o script 'build' definido no package.json
+      #    IMPORTANTE: Garanta que seu vite.config.js tem a opção 'base' configurada corretamente!
+      - name: Build application
+        run: npm run build
+
+      # 6. Deploy para GitHub Pages: Usa uma action popular para fazer o deploy
+      #    Pega o conteúdo da pasta 'dist' e envia para o branch 'gh-pages'.
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3 # Action específica para deploy no gh-pages
+        with:
+          # Token especial fornecido pelo GitHub Actions para autenticar
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Pasta que contém os arquivos do build a serem publicados
+          publish_dir: ./dist
+          # Opcional: Nome do branch para onde fazer deploy (padrão já é gh-pages)
+          # publish_branch: gh-pages
+          # Opcional: Força a criação de um histórico limpo no branch gh-pages (evita histórico grande)
+          # force_orphan: true

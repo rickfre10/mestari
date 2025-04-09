@@ -5,6 +5,6 @@ import vue from '@vitejs/plugin-vue'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  // ADICIONE ESTA LINHA:
-  base: '/mestari/' // IMPORTANTE: Barras no início e no fim!
+
+  base: '/mestari/' 
 })
