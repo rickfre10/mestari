@@ -1,8 +1,11 @@
+/* Conteúdo Padrão Típico do style.css (ou index.css) em Vite + Vue */
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
+  /* Define esquema de cores e cores padrão (geralmente começa escuro) */
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
@@ -24,25 +27,26 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  /* Estilos de layout que podem ou não ser desejados globalmente */
+  /* display: flex; */
+  /* place-items: center; */
   min-width: 320px;
   min-height: 100vh;
 }
 
-h1 {
+h1 { /* Estilo global para H1 - pode conflitar com o do App.vue */
   font-size: 3.2em;
   line-height: 1.1;
 }
 
-button {
+button { /* Estilo global para button - pode conflitar */
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: #1a1a1a; /* Fundo padrão escuro */
   cursor: pointer;
   transition: border-color 0.25s;
 }
@@ -54,17 +58,20 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Classe de exemplo do template inicial, pode não existir mais */
 .card {
   padding: 2em;
 }
 
+/* Estilos para o container principal da aplicação Vue */
 #app {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  /* padding: 2rem; */ /* Removido/Ajustado no App.vue */
+  /* text-align: center; */ /* Removido/Ajustado no App.vue */
 }
 
+/* Sobrescritas para o modo claro baseado na preferência do sistema */
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -74,6 +81,6 @@ button:focus-visible {
     color: #747bff;
   }
   button {
-    background-color: #f9f9f9;
+    background-color: #f9f9f9; /* Fundo claro para botões */
   }
 }
