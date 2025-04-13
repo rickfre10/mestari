@@ -1,7 +1,5 @@
 # Mestari ⏱️
 
-# Mestari
-
 **Mestari** is a simple and effective app to help you run meetings and events on time.
 
 ---
