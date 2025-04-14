@@ -3,14 +3,11 @@
 import { ref, onMounted, onUnmounted, watchEffect, computed } from 'vue'
 
 // --- ESTADO REATIVO ---
-const event = ref({
-  eventName: 'Meu Evento Padrão', // Nome padrão, será carregado/salvo
-  blocks: []              // Array de Blocos
-});
-const newBlockName = ref('');         // Input Nome do Bloco
-const newBlockDuration = ref(60);    // Input Duração do Bloco (segundos)
-const currentBlockIndex = ref(null); // Índice do bloco ativo (-1 ou null = nenhum)
-const isDarkMode = ref(false);        // Controle do Tema (false = claro)
+const event = ref({ eventName: 'Meu Evento Padrão', blocks: [] });
+const newBlockName = ref('');
+const newBlockDuration = ref(60);
+const currentBlockIndex = ref(null);
+const isDarkMode = ref(false);
 
 // --- FUNÇÃO AUXILIAR DE TEMPO ---
 // Converte segundos para formato "HH:MM:SS"
@@ -28,34 +25,31 @@ function formatTime(totalSeconds) {
 // Tempo total planejado
 const totalPlannedDuration = computed(() => {
   const totalSeconds = event.value.blocks.reduce((sum, block) => sum + (block.duration || 0), 0);
-  return formatTime(totalSeconds);
+  return formatTime(totalSeconds); // Formata para exibição
 });
 
-// Tempo total REAL decorrido no evento
+// Tempo total REAL decorrido no evento (em segundos)
 const totalEventElapsedTime = computed(() => {
     let elapsedSeconds = 0;
     for(const block of event.value.blocks) {
-        if (block.status === 'completed') { elapsedSeconds += block.duration; } // Conta duração planejada se completado SEM estourar
-        else if (block.status === 'overrun') { elapsedSeconds += block.elapsedTime; } // Conta tempo real se estourou
-        else if (block.status === 'running' || block.status === 'paused') {
-             // Se está ativo ou pausado, conta o tempo decorrido nele e para
+        if (block.status === 'completed' || block.status === 'overrun') {
+             elapsedSeconds += block.elapsedTime; // Usa o tempo real que levou
+        } else if (block.status === 'running' || block.status === 'paused') {
              const blockIndex = event.value.blocks.findIndex(b => b.id === block.id);
              if(blockIndex === currentBlockIndex.value) {
-                 elapsedSeconds += block.elapsedTime;
+                 elapsedSeconds += block.elapsedTime; // Adiciona o tempo do atual e para
                  break;
-             } else if (block.status === 'paused') {
-                 // Considera o tempo de blocos pausados *antes* do atual, se relevante
-                 elapsedSeconds += block.elapsedTime;
+             } else if (block.status === 'paused') { // Se pausou antes do atual
+                  elapsedSeconds += block.elapsedTime;
              }
         }
     }
-    return elapsedSeconds; // Retorna em segundos
+    return elapsedSeconds;
 });
 
-// Atraso/Folga ACUMULADO baseado nos blocos concluídos
+// Atraso/Folga ACUMULADO (baseado nos blocos concluídos)
 const cumulativeEventDelay = computed(() => {
     const totalDelaySeconds = event.value.blocks.reduce((sum, block) => {
-        // Soma apenas se completionDelay for um número (bloco efetivamente concluído/marcado)
         return sum + (typeof block.completionDelay === 'number' ? block.completionDelay : 0);
     }, 0);
     const roundedDelay = Math.round(totalDelaySeconds);
@@ -66,7 +60,6 @@ const cumulativeEventDelay = computed(() => {
     };
 });
 
-
 // Retorna o objeto do bloco atual ou null
 const currentBlock = computed(() => {
   if (currentBlockIndex.value !== null && currentBlockIndex.value >= 0 && currentBlockIndex.value < event.value.blocks.length) {
@@ -75,65 +68,72 @@ const currentBlock = computed(() => {
   return null;
 });
 
+// Progresso percentual do bloco atual (para barra)
+const currentBlockProgress = computed(() => {
+  if (!currentBlock.value || !currentBlock.value.duration || currentBlock.value.duration === 0) {
+    return 0; // Evita divisão por zero e retorna 0 se não aplicável
+  }
+  // Calcula percentual, mas limita visualmente a 100% (estouro indicado pela cor)
+  const progress = (currentBlock.value.elapsedTime / currentBlock.value.duration) * 100;
+  return Math.min(progress, 100); // Barra não passa de 100%
+});
+
+// Tempo formatado para exibição REGRESSIVA no bloco atual
+const currentBlockDisplayTime = computed(() => {
+  if (!currentBlock.value) { return '--:--:--'; } // Valor padrão se não há bloco ativo
+  // Calcula tempo restante (pode ser negativo)
+  const remainingSeconds = currentBlock.value.duration - currentBlock.value.elapsedTime;
+  // Formata o valor absoluto
+  const formattedTime = formatTime(remainingSeconds);
+  // Adiciona sinal negativo se necessário
+  return remainingSeconds < 0 ? `-${formattedTime}` : formattedTime;
+});
+
 
 // --- PERSISTÊNCIA COM LOCALSTORAGE ---
 watchEffect(() => {
-  // Salva o objeto event (incluindo eventName, notes, completionDelay) e o tema
   localStorage.setItem('mestariEventData', JSON.stringify(event.value));
   localStorage.setItem('mestariTheme', JSON.stringify(isDarkMode.value));
-  // console.log("Estado salvo."); // Log pode ser habilitado para debug
 });
 
 // --- GERENCIAMENTO DO TICKER GLOBAL ---
 let intervalId = null;
 onMounted(() => {
-  // Carrega evento
-  const savedEvent = localStorage.getItem('mestariEventData');
-  if (savedEvent) {
-    try {
-      const loadedEvent = JSON.parse(savedEvent);
-      // Garante estrutura mínima e restaura nome/blocos
-      event.value = {
-        eventName: loadedEvent?.eventName || 'Meu Evento Recuperado',
-        blocks: Array.isArray(loadedEvent?.blocks) ? loadedEvent.blocks : []
-      };
-      // Garante que propriedades existam nos blocos carregados
-      event.value.blocks.forEach(block => {
-        if (block.completionDelay === undefined) block.completionDelay = null;
-        if (block.elapsedTime === undefined) block.elapsedTime = 0;
-        if (block.notes === undefined) block.notes = '';
-        // Reseta status não-ociosos ao carregar
-        if (block.status !== 'idle' && block.status !== 'completed') {
-             block.status = 'idle'; // Começa parado ao carregar
-        }
-      });
-    } catch (e) {
-      console.error("Erro ao carregar evento:", e); localStorage.removeItem('mestariEventData');
-      event.value = { eventName: 'Novo Evento (Erro ao Carregar)', blocks: [] };
-    }
-  } else {
-    event.value.eventName = 'Meu Primeiro Evento'; // Nome inicial se nada salvo
-  }
-
-  // Carrega tema
-  const savedTheme = localStorage.getItem('mestariTheme');
-  if (savedTheme) { try { isDarkMode.value = JSON.parse(savedTheme); } catch(e) { console.error("Erro ao carregar tema", e); } }
-
-  currentBlockIndex.value = null; // Nenhum bloco ativo ao iniciar
-  intervalId = setInterval(tick, 1000); // Inicia ticker
+  // Carrega evento e tema do localStorage... (lógica robusta de carregamento)
+   const savedEvent = localStorage.getItem('mestariEventData');
+   if (savedEvent) {
+       try {
+           const loadedEvent = JSON.parse(savedEvent);
+           event.value = {
+               eventName: loadedEvent?.eventName || 'Evento Carregado',
+               blocks: Array.isArray(loadedEvent?.blocks) ? loadedEvent.blocks : []
+           };
+           event.value.blocks.forEach(block => { // Garante propriedades default
+               if (block.completionDelay === undefined) block.completionDelay = null;
+               if (block.elapsedTime === undefined) block.elapsedTime = 0;
+               if (block.notes === undefined) block.notes = '';
+               if (block.duration === undefined) block.duration = 60; // Default duration if missing
+               if (block.status !== 'idle' && block.status !== 'completed') block.status = 'idle';
+           });
+       } catch (e) { console.error("Erro ao carregar evento:", e); localStorage.removeItem('mestariEventData'); event.value = { eventName: 'Novo Evento (Erro ao Carregar)', blocks: [] }; }
+   } else { event.value.eventName = 'Meu Primeiro Evento'; }
+   const savedTheme = localStorage.getItem('mestariTheme');
+   if (savedTheme) { try { isDarkMode.value = JSON.parse(savedTheme); } catch(e) { console.error("Erro ao carregar tema", e); } }
+   currentBlockIndex.value = null; // Sempre começa sem bloco ativo
+   intervalId = setInterval(tick, 1000);
 });
-onUnmounted(() => { clearInterval(intervalId); }); // Limpa ticker
+onUnmounted(() => { clearInterval(intervalId); });
 
 // --- FUNÇÕES CORE ---
-// 'tick': Atualiza tempo decorrido do bloco ativo
+// 'tick': Atualiza elapsedTime do bloco ativo, muda status para 'overrun'
 function tick() {
   if (currentBlock.value && (currentBlock.value.status === 'running' || currentBlock.value.status === 'overrun')) {
       currentBlock.value.elapsedTime++;
-      // Muda para 'overrun' se tempo estourou E ainda estava 'running'
-      if (currentBlock.value.status === 'running' && currentBlock.value.elapsedTime > currentBlock.value.duration) {
+      // Muda para 'overrun' EXATAMENTE quando estoura (ou se já estava)
+      if (currentBlock.value.elapsedTime > currentBlock.value.duration && currentBlock.value.status !== 'overrun') {
           console.log(`Tempo do bloco ${currentBlock.value.id} estourado!`);
           currentBlock.value.status = 'overrun';
-          // TODO: Sinal visual/sonoro
+          // TODO: Disparar sinal visual/sonoro aqui (a classe CSS já será aplicada)
       }
   }
 }
@@ -141,8 +141,7 @@ function tick() {
 // Marca bloco como completo e calcula seu delay/folga
 function markBlockComplete(block) {
   if (!block || block.status === 'completed') return;
-  // Calcula o desvio SÓ se não foi calculado antes
-  if (block.completionDelay === null) {
+  if (block.completionDelay === null) { // Calcula só uma vez
       block.completionDelay = block.elapsedTime - block.duration;
   }
   block.status = 'completed';
@@ -164,29 +163,29 @@ function addBlock() {
 function startBlock(blockId) {
   const blockIndex = event.value.blocks.findIndex(b => b.id === blockId);
   if (blockIndex !== -1 && event.value.blocks[blockIndex].status === 'idle') {
-    // Pausa o bloco anterior, se houver um rodando/estourado
+    // Pausa o anterior se estiver rodando/estourado
     if (currentBlock.value && (currentBlock.value.status === 'running' || currentBlock.value.status === 'overrun')) {
        currentBlock.value.status = 'paused';
     }
     currentBlockIndex.value = blockIndex;
-    event.value.blocks[blockIndex].status = 'running';
+    event.value.blocks[blockIndex].status = 'running'; // Inicia o novo
   }
 }
-function pauseBlock() {
+function pauseBlock() { // Pausa o atual
   if (currentBlock.value && (currentBlock.value.status === 'running' || currentBlock.value.status === 'overrun')) {
     currentBlock.value.status = 'paused';
   }
 }
-function resumeBlock() {
+function resumeBlock() { // Retoma o atual
   if (currentBlock.value && currentBlock.value.status === 'paused') {
-     event.value.blocks.forEach((block, index) => { // Pausa outros por segurança
+     event.value.blocks.forEach((block, index) => { // Pausa outros (segurança)
          if(index !== currentBlockIndex.value && (block.status === 'running' || block.status === 'overrun')) { block.status = 'paused'; }
      });
-     // Volta para 'running' ou 'overrun' dependendo do tempo
+     // Define status baseado no tempo decorrido vs duração
      currentBlock.value.status = (currentBlock.value.elapsedTime >= currentBlock.value.duration) ? 'overrun' : 'running';
   }
 }
-function resetBlock(blockId) {
+function resetBlock(blockId) { // Reseta um bloco específico
   const blockIndex = event.value.blocks.findIndex(b => b.id === blockId);
   if (blockIndex !== -1) {
     const block = event.value.blocks[blockIndex];
@@ -194,41 +193,41 @@ function resetBlock(blockId) {
     block.status = 'idle';
     block.elapsedTime = 0;
     block.completionDelay = null; // Reseta delay
-    if (wasCurrent) { currentBlockIndex.value = null; }
+    if (wasCurrent) { currentBlockIndex.value = null; } // Para a contagem se era o atual
   }
 }
-function deleteBlock(blockId) {
+function deleteBlock(blockId) { // Deleta um bloco específico
   const index = event.value.blocks.findIndex(b => b.id === blockId);
   if (index !== -1) {
     const wasCurrent = (currentBlockIndex.value === index);
     const isBeforeCurrent = (currentBlockIndex.value !== null && index < currentBlockIndex.value);
-    event.value.blocks.splice(index, 1);
-    if (wasCurrent) { currentBlockIndex.value = null; }
-    else if (isBeforeCurrent) { currentBlockIndex.value--; }
+    event.value.blocks.splice(index, 1); // Remove
+    if (wasCurrent) { currentBlockIndex.value = null; } // Para contagem
+    else if (isBeforeCurrent) { currentBlockIndex.value--; } // Ajusta índice
   }
 }
-// Avança para o próximo bloco manualmente
+// Avança manualmente para o próximo bloco sequencial
 function goToNextBlock() {
     let nextIndex = -1;
     const currentIndex = currentBlockIndex.value;
 
-    if (currentIndex === null) { // Inicia o primeiro idle se nenhum estiver ativo
+    if (currentIndex === null) { // Se nada ativo, inicia o primeiro idle
         nextIndex = event.value.blocks.findIndex(b => b.status === 'idle');
-    } else { // Avança a partir do atual
+    } else { // Se algo ativo, marca como completo e avança
         const currentBlockRef = event.value.blocks[currentIndex];
         markBlockComplete(currentBlockRef); // Marca atual como completo (calcula delay)
         nextIndex = currentIndex + 1; // Próximo na sequência
-        if (nextIndex >= event.value.blocks.length) { nextIndex = -1; } // Verifica fim da lista
+        if (nextIndex >= event.value.blocks.length) { nextIndex = -1; } // Fim da lista
     }
 
-    if (nextIndex !== -1) { // Se encontrou um próximo
+    if (nextIndex !== -1) { // Se achou próximo
         currentBlockIndex.value = nextIndex;
-        // Inicia o próximo bloco se ele estiver 'idle'
+        // Inicia o próximo bloco APENAS se ele estiver 'idle'
         if(event.value.blocks[nextIndex].status === 'idle'){
              event.value.blocks[nextIndex].status = 'running';
-        } // Se não estiver 'idle', apenas o torna ativo (ex: se já estava pausado)
-    } else { // Fim da lista
-        currentBlockIndex.value = null;
+        } // Se não estiver idle (ex: já completo, pausado), apenas o torna 'ativo' na UI
+    } else { // Não achou próximo
+        currentBlockIndex.value = null; // Nenhum bloco ativo
     }
 }
 
@@ -236,9 +235,10 @@ function goToNextBlock() {
 function moveBlockUp(index) {
   if (index > 0) {
     const blocks = event.value.blocks;
+    // Ajusta índice ANTES da troca
     if (currentBlockIndex.value === index) { currentBlockIndex.value = index - 1; }
     else if (currentBlockIndex.value === index - 1) { currentBlockIndex.value = index; }
-    [blocks[index - 1], blocks[index]] = [blocks[index], blocks[index - 1]];
+    [blocks[index - 1], blocks[index]] = [blocks[index], blocks[index - 1]]; // Troca
   }
 }
 function moveBlockDown(index) {
@@ -246,7 +246,7 @@ function moveBlockDown(index) {
     const blocks = event.value.blocks;
     if (currentBlockIndex.value === index) { currentBlockIndex.value = index + 1; }
     else if (currentBlockIndex.value === index + 1) { currentBlockIndex.value = index; }
-    [blocks[index + 1], blocks[index]] = [blocks[index], blocks[index + 1]];
+    [blocks[index + 1], blocks[index]] = [blocks[index], blocks[index + 1]]; // Troca
   }
 }
 
@@ -292,13 +292,19 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
         </div>
       </section>
 
-      <section class="current-block" v-if="currentBlock">
+      <section class="current-block" v-if="currentBlock" :class="{ 'overrun-bg': currentBlock.status === 'overrun' || currentBlock.elapsedTime > currentBlock.duration }">
         <h3>Agora:</h3>
         <div class="current-block-header">
            <h4>{{ currentBlock.name || 'Bloco Atual' }}</h4>
            <span class="current-block-timer" :class="{ 'overtime-indicator': currentBlock.elapsedTime > currentBlock.duration }">
-             {{ formatTime(currentBlock.elapsedTime) }} / {{ formatTime(currentBlock.duration) }}
+             {{ currentBlockDisplayTime }}
            </span>
+        </div>
+        <div class="progress-bar-container" :title="`Progresso: ${Math.min(currentBlock.elapsedTime, currentBlock.duration)} / ${currentBlock.duration}s`">
+            <div class="progress-bar"
+                 :style="{ width: currentBlockProgress + '%' }"
+                 :class="{ 'progress-overrun': currentBlock.elapsedTime > currentBlock.duration }">
+            </div>
         </div>
         <label :for="'notes-' + currentBlock.id">Pauta e Anotações:</label>
         <textarea :id="'notes-' + currentBlock.id" v-model="currentBlock.notes"></textarea>
@@ -309,12 +315,13 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
       <section class="current-block" v-else>
          <h3>Nenhum bloco ativo</h3>
          <p v-if="event.blocks.length > 0 && event.blocks.some(b => b.status === 'idle')">Use o botão "Iniciar" na lista abaixo ou clique aqui para iniciar o próximo bloco ocioso.</p>
-         <p v-else-if="event.blocks.length > 0">Todos os blocos foram concluídos ou estão pausados.</p>
+         <p v-else-if="event.blocks.length > 0">Todos os blocos foram concluídos.</p>
          <p v-else>Adicione blocos ao evento para começar.</p>
          <button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button">
               Iniciar Evento / Próximo Bloco ▶▶
           </button>
       </section>
+
 
       <section class="add-timer-form">
         <h3>Adicionar Novo Bloco</h3>
@@ -334,8 +341,7 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
         <ul v-if="event.blocks.length > 0">
           <li v-for="(block, index) in event.blocks" :key="block.id" :class="{ active: index === currentBlockIndex }">
             <div class="block-content">
-                <span>
-                  {{ block.name || 'Sem nome' }} | {{ formatTime(block.duration) }} |
+                <span> {{ block.name || 'Sem nome' }} | {{ formatTime(block.duration) }} |
                   Dec: <span :class="{ 'overtime-indicator': block.elapsedTime > block.duration }">{{ formatTime(block.elapsedTime) }}</span> |
                   Status: {{ block.status }}
                   <span v-if="block.completionDelay !== null" :class="{ delay: block.completionDelay > 5, slack: block.completionDelay < -5 }">
@@ -349,12 +355,13 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
                   <button @click="deleteBlock(block.id)" class="control-button delete" title="Deletar">🗑</button>
                 </span>
             </div>
-             <div class="reorder-controls">
+            <div class="reorder-controls">
                 <button @click="moveBlockUp(index)" :disabled="index === 0" title="Mover para cima">⬆️</button>
                 <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" title="Mover para baixo">⬇️</button>
             </div>
             <div class="notes-area">
-                <textarea :id="'notes-li-' + block.id" v-model="block.notes" placeholder="Adicionar pauta/anotações..." rows="3"></textarea> </div>
+                <textarea :id="'notes-li-' + block.id" v-model="block.notes" placeholder="Adicionar pauta/anotações..." rows="3"></textarea>
+            </div>
           </li>
         </ul>
         <p v-else>Nenhum bloco adicionado a este evento ainda.</p>
@@ -368,7 +375,6 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
 
 /* Variáveis e Estilos Gerais */
-:root { /* Variáveis definidas aqui para referência, mas aplicadas via .app-container */ }
 .app-container {
   /* Cores Modo Claro */
   --primary-color: #6821ff; --primary-hover-color: #551adf;
@@ -378,6 +384,8 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
   --item-active-border: var(--primary-color); --input-bg: #ffffff; --input-border: #ced4da;
   --input-text: #495057; --shadow-color: rgba(0,0,0,0.05); --h2-border-color: #dddddd;
   --overtime-color: #dc3545; --delay-color: var(--overtime-color); --slack-color: #28a745;
+  --progress-track-color: #e9ecef; --progress-overrun-bg: var(--overtime-color);
+  --current-block-overrun-bg: #ffebee; /* Fundo levemente vermelho claro */
   --btn-start-bg: #28a745; --btn-pause-bg: #ffc107; --btn-pause-text: #333;
   --btn-resume-bg: #17a2b8; --btn-reset-bg: #6c757d; --btn-delete-bg: #dc3545;
   --btn-reorder-bg: #f0f0f0; --btn-reorder-text: #555; --btn-reorder-hover-bg: #e0e0e0;
@@ -396,7 +404,9 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
   --item-active-bg: #3a2c50; --item-active-border: var(--primary-color);
   --input-bg: #252a33; --input-border: #4b5a6a; --input-text: #e0e0e0;
   --shadow-color: rgba(0,0,0,0.3); --h2-border-color: #4b5a6a;
-  --overtime-color: #ff6b6b;
+  --overtime-color: #ff6b6b; --delay-color: var(--overtime-color); --slack-color: #28a745;
+  --progress-track-color: #495057; --progress-overrun-bg: var(--overtime-color);
+  --current-block-overrun-bg: #4d2a2f; /* Fundo levemente vermelho escuro */
   --btn-pause-text: #333;
   --btn-reorder-bg: #3a4a5a; --btn-reorder-text: #ccc; --btn-reorder-hover-bg: #4b5a6a;
 }
@@ -430,9 +440,9 @@ section.add-timer-form h3 { text-align: center; border-bottom: none; }
 .add-timer-form button { margin-top: 10px; margin-bottom: 0; width: 100%; }
 
 /* Botões Principais (Add Bloco, Próximo Bloco, Iniciar Evento) */
-button { display: block; margin: 20px auto 10px auto; padding: 12px 25px; cursor: pointer; background-color: var(--primary-color); color: var(--button-text); border: none; border-radius: 5px; font-size: 1.1em; font-weight: 500; font-family: inherit; transition: background-color 0.2s ease; }
+button { /* Estilos aplicados aos botões fora da lista */ display: block; margin: 20px auto 10px auto; padding: 12px 25px; cursor: pointer; background-color: var(--primary-color); color: var(--button-text); border: none; border-radius: 5px; font-size: 1.1em; font-weight: 500; font-family: inherit; transition: background-color 0.2s ease; }
 button:hover { background-color: var(--primary-hover-color); }
-.next-block-button { background-color: var(--primary-color); } /* Garante cor primária */
+.next-block-button { background-color: var(--primary-color); }
 .next-block-button:hover { background-color: var(--primary-hover-color); }
 
 /* Status Geral */
@@ -444,9 +454,10 @@ button:hover { background-color: var(--primary-hover-color); }
 .status-item .slack { color: var(--slack-color); }
 
 /* Bloco Atual / Agora */
-.current-block { background-color: var(--item-active-bg); border: 1px solid var(--item-active-border); border-radius: 6px; padding: 20px; box-shadow: 0 1px 3px var(--shadow-color); }
+.current-block { background-color: var(--item-bg); border: 1px solid var(--item-border); border-radius: 6px; padding: 20px; box-shadow: 0 1px 3px var(--shadow-color); transition: background-color 0.3s ease; /* Transição para cor de fundo */ }
+.current-block.overrun-bg { background-color: var(--current-block-overrun-bg); } /* NOVO: Fundo de estouro */
 .current-block h3 { border-bottom-color: var(--item-border); }
-.current-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+.current-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; } /* Reduzido margin-bottom */
 .current-block-header h4 { margin: 0; font-size: 1.4em; font-weight: 700; color: var(--primary-color); }
 .dark-theme .current-block-header h4 { color: var(--primary-color); }
 .current-block-timer { font-size: 1.6em; font-weight: 700; color: var(--text-color); white-space: nowrap; }
@@ -454,14 +465,18 @@ button:hover { background-color: var(--primary-hover-color); }
 .current-block label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: 500; color: var(--text-muted-color); font-size: 0.9em;}
 .current-block textarea { width: 100%; min-height: 120px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--input-text); border-radius: 4px; padding: 10px; font-family: inherit; font-size: 1em; margin-top: 5px; box-sizing: border-box; resize: vertical; }
 
+/* Barra de Progresso */
+.progress-bar-container { width: 100%; height: 10px; background-color: var(--progress-track-color); border-radius: 5px; overflow: hidden; margin-top: 8px; margin-bottom: 15px; }
+.progress-bar { height: 100%; background-color: var(--primary-color); border-radius: 5px 0 0 5px; transition: width 0.2s ease-out, background-color 0.3s ease; }
+.progress-bar.progress-overrun { background-color: var(--progress-overrun-bg); border-radius: 5px; /* Fica vermelha inteira ao estourar */ }
+
 /* Lista de Blocos */
 ul { list-style: none; padding: 0; }
 li { background-color: var(--item-bg); border: 1px solid var(--item-border); color: var(--text-color); padding: 15px; margin-bottom: 12px; border-radius: 6px; font-size: 1em; display: block; box-shadow: 0 1px 3px var(--shadow-color); transition: box-shadow 0.2s ease, border-left 0.3s ease, background-color 0.3s ease; border-left: 5px solid transparent; }
 li:hover { box-shadow: 0 3px 6px var(--shadow-color); }
 li.active { background-color: var(--item-active-bg); border-left: 5px solid var(--item-active-border); font-weight: 500; }
-
 .block-content { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 10px; }
-.block-content > span:first-child { flex-grow: 1; margin-right: 15px; overflow-wrap: break-word; margin-bottom: 5px; line-height: 1.4; } /* Melhora leitura */
+.block-content > span:first-child { flex-grow: 1; margin-right: 15px; overflow-wrap: break-word; margin-bottom: 5px; line-height: 1.4; }
 .block-content > span:last-child { white-space: nowrap; flex-shrink: 0; margin-left: auto; }
 .notes-area { margin-top: 10px; width: 100%; }
 .notes-area textarea { width: 100%; min-height: 60px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--input-text); border-radius: 4px; padding: 8px; font-family: inherit; font-size: 0.95em; box-sizing: border-box; resize: vertical; }
@@ -469,17 +484,12 @@ li.active { background-color: var(--item-active-bg); border-left: 5px solid var(
 .overtime-indicator { color: var(--overtime-color); font-weight: bold; }
 .delay { color: var(--delay-color); }
 .slack { color: var(--slack-color); }
-li span .delay, li span .slack { /* Estilo para desvio dentro da linha do bloco */
-    font-weight: bold;
-    font-size: 0.9em;
-    margin-left: 5px;
-}
-
+li span .delay, li span .slack { font-weight: bold; font-size: 0.9em; margin-left: 5px; }
 
 /* Mensagem de lista vazia */
 p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-size: 1.1em; }
 
-/* Botões de Controle na Lista*/
+/* Botões de Controle na Lista */
 .control-button { display: inline-block; margin: 0; margin-left: 5px; padding: 5px 8px; font-size: 1em; line-height: 1; cursor: pointer; color: var(--button-text); border: none; border-radius: 4px; vertical-align: middle; font-weight: normal; font-family: inherit; transition: opacity 0.2s ease, background-color 0.2s ease; }
 .control-button:hover { opacity: 0.85; }
 .control-button.start { background-color: var(--btn-start-bg); }
