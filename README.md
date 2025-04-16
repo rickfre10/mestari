@@ -9,7 +9,7 @@
 O **Mestari** é um aplicativo que te ajuda a organizar e manter sua reunião ou evento dentro do cronograma!  
 Você pode criar vários blocos de pauta, definir um tempo máximo para cada um e registrar os pontos-chave do seu discurso e anotações.
 
-➡️ **Experimente agora**: [https://rickfre10.github.io/mestari/](https://rickfre10.github.io/mestari/)
+➡️ **Experimente agora**: [https://mestari.rickfre.com.br/](mestari.rickfre.com.br)
 
 ---
 
@@ -18,7 +18,7 @@ Você pode criar vários blocos de pauta, definir um tempo máximo para cada um 
 **Mestari** is an app that helps you organize and keep your meeting or event on schedule!  
 You can create multiple agenda blocks, assign a timebox to each one, and save your talking points or notes.
 
-➡️ **Try it now**: [https://rickfre10.github.io/mestari/](https://rickfre10.github.io/mestari/)
+➡️ **Try it now**: [https://mestari.rickfre.com.br/](mestari.rickfre.com.br)
 
 ---
 
@@ -27,7 +27,7 @@ You can create multiple agenda blocks, assign a timebox to each one, and save yo
 **Mestari** es una aplicación que te ayuda a organizar y mantener tu reunión o evento dentro del horario.  
 Puedes crear varios bloques de temas, asignarles un tiempo máximo y guardar tus puntos clave o anotaciones.
 
-➡️ **Pruébalo ahora**: [https://rickfre10.github.io/mestari/](https://rickfre10.github.io/mestari/)
+➡️ **Pruébalo ahora**: [https://mestari.rickfre.com.br/](mestari.rickfre.com.br)
 
 ---
 
@@ -36,4 +36,4 @@ Puedes crear varios bloques de temas, asignarles un tiempo máximo y guardar tus
 **Mestari** ist eine App, die dir hilft, dein Meeting oder Event gut zu organisieren und im Zeitplan zu bleiben!  
 Du kannst mehrere Themenblöcke erstellen, jedem eine Zeitvorgabe zuweisen und deine Stichpunkte oder Notizen speichern.
 
-➡️ **Jetzt ausprobieren**: [https://rickfre10.github.io/mestari/](https://rickfre10.github.io/mestari/)
+➡️ **Jetzt ausprobieren**: [https://mestari.rickfre.com.br/](mestari.rickfre.com.br)
