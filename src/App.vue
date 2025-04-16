@@ -57,7 +57,7 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
     </header>
 
     <main>
-      <section class="global-event-actions">
+       <section class="global-event-actions">
           <button @click="startNewEvent" class="header-button new-event" title="Limpar e Iniciar Novo Evento">✨ Novo evento</button>
           <button @click="triggerFileInput" class="header-button" title="Carregar Evento de Arquivo JSON">⬆️ Subir evento</button>
           <input type="file" accept=".json,application/json" @change="loadEventFromFile" ref="fileInputRef" style="display: none;">
@@ -71,18 +71,35 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
       </section>
 
       <section class="event-status-section">
-        <h3>Status Geral do Evento</h3><div class="status-grid"><div class="status-item"><span>Planejado</span><strong>{{ totalPlannedDuration }}</strong></div><div class="status-item"><span>Decorrido</span><strong>{{ formatTime(totalEventElapsedTime) }}</strong></div><div class="status-item"><span>Atraso / Folga Acumulado</span><strong :class="{ delay: cumulativeEventDelay.seconds > 5, slack: cumulativeEventDelay.seconds < -5 }">{{ cumulativeEventDelay.sign }}{{ cumulativeEventDelay.time }}</strong></div></div>
+        <h3>Status Geral do Evento</h3>
+        <div class="status-grid">
+           <div class="status-item"><span>Planejado</span><strong>{{ totalPlannedDuration }}</strong></div>
+           <div class="status-item"><span>Decorrido</span><strong>{{ formatTime(totalEventElapsedTime) }}</strong></div>
+           <div class="status-item"><span>Atraso / Folga Acumulado</span><strong :class="{ delay: cumulativeEventDelay.seconds > 5, slack: cumulativeEventDelay.seconds < -5 }">{{ cumulativeEventDelay.sign }}{{ cumulativeEventDelay.time }}</strong></div>
+        </div>
       </section>
 
       <section class="current-block-section" v-if="currentBlock" :class="{ 'overrun-bg': currentBlock.status === 'overrun' || currentBlock.elapsedTime > currentBlock.duration }">
-         <h3>Agora:</h3><div class="current-block-header"><h4>{{ currentBlock.name || 'Bloco Atual' }}</h4><span class="current-block-timer" :class="{ 'overtime-indicator': currentBlock.elapsedTime > currentBlock.duration }">{{ currentBlockDisplayTime }}</span></div><div class="progress-bar-container" :title="`Progresso: ${Math.min(currentBlock.elapsedTime, currentBlock.duration)} / ${currentBlock.duration}s`"><div class="progress-bar" :style="{ width: currentBlockProgress + '%' }" :class="{ 'progress-overrun': currentBlock.elapsedTime > currentBlock.duration }"></div></div><label :for="'notes-' + currentBlock.id">Pauta e Anotações:</label><textarea :id="'notes-' + currentBlock.id" v-model="currentBlock.notes"></textarea><button @click="goToNextBlock" class="next-block-button">Próximo Bloco ▶▶</button>
+         <h3>Agora:</h3>
+         <div class="current-block-header"><h4>{{ currentBlock.name || 'Bloco Atual' }}</h4><span class="current-block-timer" :class="{ 'overtime-indicator': currentBlock.elapsedTime > currentBlock.duration }">{{ currentBlockDisplayTime }}</span></div>
+         <div class="progress-bar-container" :title="`Progresso: ${Math.min(currentBlock.elapsedTime, currentBlock.duration)} / ${currentBlock.duration}s`"><div class="progress-bar" :style="{ width: currentBlockProgress + '%' }" :class="{ 'progress-overrun': currentBlock.elapsedTime > currentBlock.duration }"></div></div>
+         <label :for="'notes-' + currentBlock.id">Pauta e Anotações:</label><textarea :id="'notes-' + currentBlock.id" v-model="currentBlock.notes"></textarea>
+         <button @click="goToNextBlock" class="next-block-button">Próximo Bloco ▶▶</button>
       </section>
       <section class="current-block-section" v-else>
-         <h3>Nenhum bloco ativo</h3><p v-if="event.blocks.length > 0 && event.blocks.some(b => b.status === 'idle')">Use o botão "Iniciar" na lista abaixo ou clique aqui para iniciar o próximo bloco ocioso.</p><p v-else-if="event.blocks.length > 0">Todos os blocos foram concluídos.</p><p v-else>Adicione blocos ao evento para começar.</p><button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button">Iniciar Evento / Próximo Bloco ▶▶</button>
+          <h3>Nenhum bloco ativo</h3>
+          <p v-if="event.blocks.length > 0 && event.blocks.some(b => b.status === 'idle')">Use o botão "Iniciar" na lista abaixo ou clique aqui para iniciar o próximo bloco ocioso.</p>
+          <p v-else-if="event.blocks.length > 0">Todos os blocos foram concluídos.</p>
+          <p v-else>Adicione blocos ao evento para começar.</p>
+          <button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button">Iniciar Evento / Próximo Bloco ▶▶</button>
       </section>
 
+
       <section class="add-block-form-section">
-         <h3>Adicionar Novo Bloco</h3><div><label for="blockName">Nome do Bloco: </label><input type="text" id="blockName" v-model="newBlockName" placeholder="Nome do bloco"/></div><div><label for="blockDuration">Duração (HH:MM:SS): </label><input type="text" id="blockDuration" v-model="newBlockDurationString" placeholder="HH:MM:SS ou Segundos"/></div><button @click="addBlock">Adicionar Bloco</button>
+        <h3>Adicionar Novo Bloco</h3>
+        <div><label for="blockName">Nome do Bloco: </label><input type="text" id="blockName" v-model="newBlockName" placeholder="Nome do bloco"/></div>
+        <div><label for="blockDuration">Duração (HH:MM:SS): </label><input type="text" id="blockDuration" v-model="newBlockDurationString" placeholder="HH:MM:SS ou Segundos"/></div>
+        <button @click="addBlock" class="add-block-button">Adicionar Bloco</button>
       </section>
 
       <section class="block-list-section">
@@ -100,13 +117,15 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
                 </span>
             </div>
             <div class="block-actions-row">
-                <span class="control-buttons-group"> <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" title="Iniciar">▶</button>
+                <span class="control-buttons-group">
+                  <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" title="Iniciar">▶</button>
                   <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" title="Pausar">❚❚</button>
                   <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" title="Retomar">►</button>
                   <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" title="Resetar">↻</button>
                   <button @click="deleteBlock(block.id)" class="control-button delete" title="Deletar">🗑</button>
                 </span>
-                <span class="reorder-buttons-group"> <button @click="moveBlockUp(index)" :disabled="index === 0" title="Mover para cima">⬆️</button>
+                <span class="reorder-buttons-group">
+                  <button @click="moveBlockUp(index)" :disabled="index === 0" title="Mover para cima">⬆️</button>
                   <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" title="Mover para baixo">⬇️</button>
                 </span>
             </div>
@@ -130,67 +149,61 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
 .app-container.dark-theme { /* ... (Variáveis Dark como antes) ... */ --primary-color: #8a5fff; --primary-hover-color: #a082ff; --bg-color: #1a1d24; --text-color: #e0e0e0; --text-muted-color: #a0a0a0; --header-bg: #2f1072; --header-text: #e0e0e0; --button-text: #ffffff; --item-bg: #2c3e50; --item-border: #4b5a6a; --item-active-bg: #3a2c50; --item-active-border: var(--primary-color); --input-bg: #252a33; --input-border: #4b5a6a; --input-text: #e0e0e0; --shadow-color: rgba(0,0,0,0.3); --h2-border-color: #4b5a6a; --overtime-color: #ff6b6b; --progress-track-color: #495057; --progress-overrun-bg: var(--overtime-color); --current-block-overrun-bg: #4d2a2f; --btn-pause-text: #333; --btn-reorder-bg: #3a4a5a; --btn-reorder-text: #ccc; --btn-reorder-hover-bg: #4b5a6a; --btn-reset-event-bg: #fd7e14; --btn-reset-event-hover-bg: #e86a00; --btn-coffee-bg: #c6a78a; --btn-coffee-hover-bg: #ddbb9f; --btn-new-event-bg: #0dcaf0; --btn-new-event-hover-bg: #31d2f2;}
 
 /* Header */
-header { background-color: var(--header-bg); color: var(--header-text); padding: 15px 25px; margin-bottom: 0; /* Remove margem inferior do header */ box-shadow: 0 2px 5px var(--shadow-color); border-radius: 0 0 10px 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+header { background-color: var(--header-bg); color: var(--header-text); padding: 15px 25px; margin-bottom: 0; box-shadow: 0 2px 5px var(--shadow-color); border-radius: 0 0 10px 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 h1 { color: var(--header-text); text-align: left; margin: 0; font-size: 1.7em; font-weight: 700; flex-grow: 1; }
 .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
-.header-button { /* Estilo base para botões que *eram* do header */ background-color: rgba(255, 255, 255, 0.15); color: var(--header-text); border: 1px solid rgba(255, 255, 255, 0.5); padding: 6px 12px; border-radius: 5px; font-size: 0.85em; cursor: pointer; margin: 0; transition: background-color 0.2s ease; font-family: inherit; display: inline-block; text-decoration: none; white-space: nowrap; }
-.dark-theme .header-button { background-color: rgba(0, 0, 0, 0.2); border-color: rgba(255, 255, 255, 0.4); }
-.header-button:hover { background-color: rgba(255, 255, 255, 0.3); }
-.dark-theme .header-button:hover { background-color: rgba(0, 0, 0, 0.4); }
-.header-button.reset-event { background-color: var(--btn-reset-event-bg); border-color: transparent; }
-.header-button.reset-event:hover { background-color: var(--btn-reset-event-hover-bg); }
-/* Botão Café agora usa estilo do theme-toggle mas com cor de fundo própria */
-.coffee-button { background-color: var(--btn-coffee-bg) !important; /* Usa important para sobrescrever se necessário */ border-color: transparent !important; }
-.coffee-button:hover { background-color: var(--btn-coffee-hover-bg) !important; }
-.header-button.new-event { background-color: var(--btn-new-event-bg); border-color: transparent; color: #000; }
-.header-button.new-event:hover { background-color: var(--btn-new-event-hover-bg); }
-.theme-toggle-button { background-color: rgba(255, 255, 255, 0.15); color: var(--header-text); border: 1px solid rgba(255, 255, 255, 0.5); padding: 6px 12px; border-radius: 20px; /* Mantém arredondado */ cursor: pointer; font-size: 0.8em; font-family: inherit; display: inline-block; margin: 0; transition: background-color 0.2s ease; text-decoration: none; /* Garante que o link do café não tenha sublinhado */ white-space: nowrap; }
-.dark-theme .theme-toggle-button { background-color: rgba(0, 0, 0, 0.2); border-color: rgba(255, 255, 255, 0.4); }
-.theme-toggle-button:hover { background-color: rgba(255, 255, 255, 0.3); }
-.dark-theme .theme-toggle-button:hover { background-color: rgba(0, 0, 0, 0.4); }
+/* Estilo base para botões que ficam no header (café, tema) */
+.header-actions .header-button, /* Aplica a botões normais se voltarem */
+.header-actions .theme-toggle-button { /* Aplica ao botão de tema e ao link do café */
+  background-color: rgba(255, 255, 255, 0.15); color: var(--header-text); border: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8em; font-family: inherit;
+  display: inline-block; margin: 0; transition: background-color 0.2s ease; text-decoration: none; white-space: nowrap;
+}
+.dark-theme .header-actions .header-button,
+.dark-theme .header-actions .theme-toggle-button { background-color: rgba(0, 0, 0, 0.2); border-color: rgba(255, 255, 255, 0.4); }
+.header-actions .header-button:hover,
+.header-actions .theme-toggle-button:hover { background-color: rgba(255, 255, 255, 0.3); }
+.dark-theme .header-actions .header-button:hover,
+.dark-theme .header-actions .theme-toggle-button:hover { background-color: rgba(0, 0, 0, 0.4); }
+/* Cor específica para o botão/link do café */
+.header-actions a.coffee-button { background-color: var(--btn-coffee-bg) !important; border-color: transparent !important; color: #fff !important; /* Garante texto branco */}
+.header-actions a.coffee-button:hover { background-color: var(--btn-coffee-hover-bg) !important; }
+
 
 /* Main, Sections, H2, H3 */
-main { padding: 20px; } /* Adiciona padding ao redor do main */
-section { margin-bottom: 30px; } /* Espaço padrão entre seções */
-h2 { margin-top: 0; /* Remove margem topo do H2 da lista */ border-bottom: 2px solid var(--h2-border-color); padding-bottom: 8px; color: var(--text-color); font-weight: 700; font-size: 1.4em; margin-bottom: 20px; }
+main { padding: 20px; }
+section { margin-bottom: 30px; } /* Aumentado espaço entre seções */
+h2 { margin-top: 0; border-bottom: 2px solid var(--h2-border-color); padding-bottom: 8px; color: var(--text-color); font-weight: 700; font-size: 1.4em; margin-bottom: 20px; }
 h3 { text-align: left; margin-top:0; margin-bottom: 20px; color: var(--text-muted-color); font-weight: 500; font-size: 1.2em; border-bottom: 1px solid var(--item-border); padding-bottom: 10px; }
 section.add-block-form-section h3 { text-align: center; border-bottom: none; }
 
-/* NOVO: Seção de Ações Globais do Evento */
+/* Seção de Ações Globais do Evento */
 .global-event-actions {
-  display: flex;
-  justify-content: center; /* Centraliza os botões */
-  align-items: center;
-  flex-wrap: wrap; /* Quebra linha se necessário */
-  gap: 10px; /* Espaço entre botões */
-  margin-bottom: 30px; /* Espaço antes do Nome do Evento */
-  padding-bottom: 20px; /* Espaço abaixo */
-  border-bottom: 1px solid var(--item-border); /* Linha separadora */
+  display: flex; justify-content: center; align-items: center; flex-wrap: wrap;
+  gap: 10px; margin-bottom: 30px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--item-border);
 }
-/* Botões dentro desta seção usam o estilo .header-button */
-.global-event-actions .header-button {
-   font-size: 0.9em; /* Pode ajustar tamanho */
-   /* Mantém cores definidas pelas classes específicas (new-event, reset-event etc) */
+/* Estilo para os botões DENTRO de global-event-actions */
+.global-event-actions .header-button { /* Reutiliza classe base, mas ajusta */
+   font-size: 0.9em;
+   background-color: var(--primary-color); /* Cor primária como base */
+   border-color: transparent;
+   color: var(--button-text);
+   border-radius: 5px; /* Menos arredondado que o theme toggle */
 }
-/* Sobrescreve cor de fundo padrão do header-button se necessário */
-.global-event-actions button.header-button:not(.new-event):not(.reset-event) {
-    background-color: var(--primary-color); /* Roxo claro */
-    border-color: transparent;
-}
-.global-event-actions button.header-button:not(.new-event):not(.reset-event):hover {
+.global-event-actions .header-button:hover {
     background-color: var(--primary-hover-color);
 }
-/* Específico para modo escuro se precisar diferenciar mais */
-.dark-theme .global-event-actions button.header-button:not(.new-event):not(.reset-event) {
-     background-color: var(--primary-color); /* Roxo mais claro no dark */
-}
-.dark-theme .global-event-actions button.header-button:not(.new-event):not(.reset-event):hover {
-     background-color: var(--primary-hover-color);
-}
+/* Sobrescritas específicas DENTRO de global-event-actions */
+.global-event-actions .header-button.reset-event { background-color: var(--btn-reset-event-bg); }
+.global-event-actions .header-button.reset-event:hover { background-color: var(--btn-reset-event-hover-bg); }
+.global-event-actions .header-button.new-event { background-color: var(--btn-new-event-bg); color: #000; }
+.global-event-actions .header-button.new-event:hover { background-color: var(--btn-new-event-hover-bg); }
+/* Os botões 'Subir' e 'Salvar' usarão o estilo base roxo definido acima */
 
 
 /* Seção Nome do Evento */
-.event-name-section { margin-bottom: 30px; /* Aumenta espaço abaixo */ background-color: var(--item-bg); border: 1px solid var(--item-border); border-radius: 6px; padding: 15px 20px; box-shadow: 0 1px 3px var(--shadow-color); display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.event-name-section { margin-bottom: 30px; background-color: var(--item-bg); border: 1px solid var(--item-border); border-radius: 6px; padding: 15px 20px; box-shadow: 0 1px 3px var(--shadow-color); display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .event-name-section label { font-weight: 500; color: var(--text-color); flex-shrink: 0; }
 .event-name-section input { padding: 10px; border: 1px solid var(--input-border); border-radius: 4px; flex-grow: 1; font-size: 1.1em; font-weight: 500; font-family: inherit; background-color: var(--input-bg); color: var(--input-text); min-width: 200px; }
 
@@ -200,12 +213,14 @@ section.add-block-form-section h3 { text-align: center; border-bottom: none; }
 .add-block-form-section label { margin-right: 10px; width: 150px; text-align: right; flex-shrink: 0; font-weight: 500; color: var(--text-color); margin-bottom: 5px; }
 .add-block-form-section input { padding: 10px; border: 1px solid var(--input-border); border-radius: 4px; flex-grow: 1; font-size: 1em; font-family: inherit; background-color: var(--input-bg); color: var(--input-text); margin-bottom: 5px; }
 .add-block-form-section input::placeholder { color: var(--text-muted-color); opacity: 0.8; }
-.add-block-form-section button { margin-top: 10px; margin-bottom: 0; width: 100%; } /* Botão Add Bloco */
+/* Estilo Botão Adicionar Bloco (classe específica) */
+.add-block-button { display: block; margin: 10px 0 0 0; padding: 12px 25px; cursor: pointer; background-color: var(--primary-color); color: var(--button-text); border: none; border-radius: 5px; font-size: 1.1em; font-weight: 500; font-family: inherit; transition: background-color 0.2s ease; width: 100%; }
+.add-block-button:hover { background-color: var(--primary-hover-color); }
+
 
 /* Botões Principais (Próximo Bloco, Iniciar Evento - fora da lista) */
-button.next-block-button { /* Seletor mais específico */ display: block; margin: 20px auto 10px auto; padding: 12px 25px; cursor: pointer; background-color: var(--primary-color); color: var(--button-text); border: none; border-radius: 5px; font-size: 1.1em; font-weight: 500; font-family: inherit; transition: background-color 0.2s ease; }
+button.next-block-button { display: block; margin: 20px auto 10px auto; padding: 12px 25px; cursor: pointer; background-color: var(--primary-color); color: var(--button-text); border: none; border-radius: 5px; font-size: 1.1em; font-weight: 500; font-family: inherit; transition: background-color 0.2s ease; }
 button.next-block-button:hover { background-color: var(--primary-hover-color); }
-
 
 /* Status Geral */
 .event-status-section { background-color: var(--item-bg); border: 1px solid var(--item-border); border-radius: 6px; padding: 20px; box-shadow: 0 1px 3px var(--shadow-color); }
@@ -230,7 +245,7 @@ button.next-block-button:hover { background-color: var(--primary-hover-color); }
 .current-block-section label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: 500; color: var(--text-muted-color); font-size: 0.9em;}
 .current-block-section textarea { width: 100%; min-height: 120px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--input-text); border-radius: 4px; padding: 10px; font-family: inherit; font-size: 1em; margin-top: 5px; box-sizing: border-box; resize: vertical; }
 
-/* Lista de Blocos */
+/* Lista de Blocos (Layout interno reorganizado) */
 ul { list-style: none; padding: 0; }
 li { background-color: var(--item-bg); border: 1px solid var(--item-border); color: var(--text-color); padding: 15px; margin-bottom: 12px; border-radius: 6px; font-size: 1em; display: block; box-shadow: 0 1px 3px var(--shadow-color); transition: box-shadow 0.2s ease, border-left 0.3s ease, background-color 0.3s ease; border-left: 5px solid transparent; }
 li:hover { box-shadow: 0 3px 6px var(--shadow-color); }
@@ -259,23 +274,26 @@ p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-s
 .control-button.delete { background-color: var(--btn-delete-bg); }
 
 /* Botões Reordenar */
-.reorder-buttons-group button { background-color: var(--btn-reorder-bg); color: var(--btn-reorder-text); border: 1px solid var(--item-border); padding: 3px 8px; font-size: 1.2em; line-height: 1; /* margin-left removido, use gap */ cursor: pointer; border-radius: 3px; vertical-align: middle; }
+.reorder-buttons-group button { background-color: var(--btn-reorder-bg); color: var(--btn-reorder-text); border: 1px solid var(--item-border); padding: 3px 8px; font-size: 1.2em; line-height: 1; cursor: pointer; border-radius: 3px; vertical-align: middle; }
 .reorder-buttons-group button:disabled { opacity: 0.4; cursor: not-allowed; }
 .reorder-buttons-group button:hover:not(:disabled) { background-color: var(--btn-reorder-hover-bg); }
 
-/* ----- Estilos Grid Layout para Telas Maiores ----- */
-@media (min-width: 992px) { /* Ponto de quebra Desktop/iPad Pro */
-  main { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.5fr); /* Col Esq(1fr), Col Dir(1.5fr) */ gap: 25px 30px; align-items: start; }
-  .event-name-section { grid-column: 1 / 3; grid-row: 1; } /* Nome: Linha 1, Col 1-2 */
-  .event-status-section { grid-column: 1; grid-row: 2; } /* Status: Linha 2, Col Esq */
-  .add-block-form-section { grid-column: 1; grid-row: 3; } /* Add Bloco: Linha 3, Col Esq */
-  .current-block-section { grid-column: 2; grid-row: 2; } /* Agora: Linha 2, Col Dir */
-  .block-list-section { grid-column: 2; grid-row: 3; } /* Lista Blocos: Linha 3, Col Dir */
-  main section { margin-bottom: 0; } /* Remove margem padrão no grid */
-  .event-status-section, .current-block-section { margin-bottom: 25px; } /* Margem entre linhas 2 e 3 */
-  .add-block-form-section h3, .timer-list-section h2 { margin-top: 0; }
-  .event-status h3, .current-block h3 { margin-top: 0; }
-  .event-name-section { margin-bottom: 30px; }
+/* Estilos Grid Layout para Telas Maiores */
+@media (min-width: 992px) {
+  main { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.5fr); gap: 25px 30px; align-items: start; }
+  /* Posicionamento das seções */
+  .global-event-actions { grid-column: 1 / 3; grid-row: 1; padding-bottom: 20px; margin-bottom: 0; border-bottom: 1px solid var(--item-border); justify-content: flex-start; }
+  .event-name-section { grid-column: 1 / 3; grid-row: 2; }
+  .event-status-section { grid-column: 1; grid-row: 3; }
+  .add-block-form-section { grid-column: 1; grid-row: 4; }
+  .current-block-section { grid-column: 2; grid-row: 3; grid-row-end: span 2; /* Faz ocupar espaço da linha 3 e 4 */ } /* Ajuste para ocupar mais espaço vertical */
+  .block-list-section { grid-column: 1; grid-row: 5; grid-column-end: span 2;} /* Ajuste para ocupar mais espaço vertical */
+
+   /* Ajustes de margem */
+   main section { margin-bottom: 0; }
+   .global-event-actions, .event-name-section, .event-status-section, .current-block-section { margin-bottom: 25px; }
+   .add-block-form-section h3, .timer-list-section h2, .event-status-section h3, .current-block-section h3 { margin-top: 0; }
+
 }
 
 </style>
