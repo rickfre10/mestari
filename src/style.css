@@ -1,6 +1,6 @@
 /* src/style.css - VERSÃO LIMPA RECOMENDADA */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif; /* Fonte base opcional */
+  font-family: system-ui, Poppins, Avenir, Helvetica, Arial, sans-serif; /* Fonte base opcional */
   line-height: 1.5;
   font-weight: 400;
   font-synthesis: none;
@@ -12,9 +12,5 @@ body {
   margin: 0; /* Reset de margem útil */
   min-width: 320px;
   min-height: 100vh;
-}
-#app { /* Pode remover se não precisar */
-   max-width: 1280px;
-   margin: 0 auto;
 }
 /* Remover outros estilos globais de button, a, h1 que definam cores/fundos */

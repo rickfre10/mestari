@@ -145,7 +145,7 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
 
 /* Variáveis e Estilos Gerais */
-.app-container { /* ... (Variáveis Light/Dark como antes) ... */ --primary-color: #6821ff; --primary-hover-color: #551adf; --bg-color: #ffffff; --text-color: #333333; --text-muted-color: #777777; --header-bg: var(--primary-color); --header-text: #ffffff; --button-text: #ffffff; --item-bg: #f8f9fa; --item-border: #dee2e6; --item-active-bg: #e8e0ff; --item-active-border: var(--primary-color); --input-bg: #ffffff; --input-border: #ced4da; --input-text: #495057; --shadow-color: rgba(0,0,0,0.05); --h2-border-color: #dddddd; --overtime-color: #dc3545; --delay-color: var(--overtime-color); --slack-color: #28a745; --progress-track-color: #e9ecef; --progress-overrun-bg: var(--overtime-color); --current-block-overrun-bg: #ffebee; --btn-start-bg: #28a745; --btn-pause-bg: #ffc107; --btn-pause-text: #333; --btn-resume-bg: #17a2b8; --btn-reset-bg: #6c757d; --btn-delete-bg: #dc3545; --btn-reorder-bg: #f0f0f0; --btn-reorder-text: #555; --btn-reorder-hover-bg: #e0e0e0; --btn-reset-event-bg: #fd7e14; --btn-reset-event-hover-bg: #e86a00; --btn-coffee-bg: #3c2a1e; --btn-coffee-hover-bg: #5a4030; --btn-new-event-bg: #0dcaf0; --btn-new-event-hover-bg: #0baccc; font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-color); min-height: 100vh; transition: background-color 0.3s ease, color 0.3s ease; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
+.app-container { /* ... (Variáveis Light/Dark como antes) ... */ --primary-color: #6821ff; --primary-hover-color: #551adf; --bg-color: #ffffff; --text-color: #333333; --text-muted-color: #777777; --header-bg: var(--primary-color); --header-text: #ffffff; --button-text: #ffffff; --item-bg: #f8f9fa; --item-border: #dee2e6; --item-active-bg: #e8e0ff; --item-active-border: var(--primary-color); --input-bg: #ffffff; --input-border: #ced4da; --input-text: #495057; --shadow-color: rgba(0,0,0,0.05); --h2-border-color: #dddddd; --overtime-color: #dc3545; --delay-color: var(--overtime-color); --slack-color: #28a745; --progress-track-color: #e9ecef; --progress-overrun-bg: var(--overtime-color); --current-block-overrun-bg: #ffebee; --btn-start-bg: #28a745; --btn-pause-bg: #ffc107; --btn-pause-text: #333; --btn-resume-bg: #17a2b8; --btn-reset-bg: #6c757d; --btn-delete-bg: #dc3545; --btn-reorder-bg: #f0f0f0; --btn-reorder-text: #555; --btn-reorder-hover-bg: #e0e0e0; --btn-reset-event-bg: #fd7e14; --btn-reset-event-hover-bg: #e86a00; --btn-coffee-bg: #3c2a1e; --btn-coffee-hover-bg: #5a4030; --btn-new-event-bg: #0dcaf0; --btn-new-event-hover-bg: #0baccc; font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-color); min-height: 100vh; transition: background-color 0.3s ease, color 0.3s ease; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; max-width: auto; margin: 0 auto; padding-bottom: 40px; }
 .app-container.dark-theme { /* ... (Variáveis Dark como antes) ... */ --primary-color: #8a5fff; --primary-hover-color: #a082ff; --bg-color: #1a1d24; --text-color: #e0e0e0; --text-muted-color: #a0a0a0; --header-bg: #2f1072; --header-text: #e0e0e0; --button-text: #ffffff; --item-bg: #2c3e50; --item-border: #4b5a6a; --item-active-bg: #3a2c50; --item-active-border: var(--primary-color); --input-bg: #252a33; --input-border: #4b5a6a; --input-text: #e0e0e0; --shadow-color: rgba(0,0,0,0.3); --h2-border-color: #4b5a6a; --overtime-color: #ff6b6b; --progress-track-color: #495057; --progress-overrun-bg: var(--overtime-color); --current-block-overrun-bg: #4d2a2f; --btn-pause-text: #333; --btn-reorder-bg: #3a4a5a; --btn-reorder-text: #ccc; --btn-reorder-hover-bg: #4b5a6a; --btn-reset-event-bg: #fd7e14; --btn-reset-event-hover-bg: #e86a00; --btn-coffee-bg: #c6a78a; --btn-coffee-hover-bg: #ddbb9f; --btn-new-event-bg: #0dcaf0; --btn-new-event-hover-bg: #31d2f2;}
 
 /* Header */
@@ -171,8 +171,8 @@ h1 { color: var(--header-text); text-align: left; margin: 0; font-size: 1.7em; f
 
 
 /* Main, Sections, H2, H3 */
-main { padding: 20px; }
-section { margin-bottom: 30px; } /* Aumentado espaço entre seções */
+main { padding: 30px; }
+section { margin-bottom: 10px; } /* Aumentado espaço entre seções */
 h2 { margin-top: 0; border-bottom: 2px solid var(--h2-border-color); padding-bottom: 8px; color: var(--text-color); font-weight: 700; font-size: 1.4em; margin-bottom: 20px; }
 h3 { text-align: left; margin-top:0; margin-bottom: 20px; color: var(--text-muted-color); font-weight: 500; font-size: 1.2em; border-bottom: 1px solid var(--item-border); padding-bottom: 10px; }
 section.add-block-form-section h3 { text-align: center; border-bottom: none; }
@@ -180,7 +180,7 @@ section.add-block-form-section h3 { text-align: center; border-bottom: none; }
 /* Seção de Ações Globais do Evento */
 .global-event-actions {
   display: flex; justify-content: center; align-items: center; flex-wrap: wrap;
-  gap: 10px; margin-bottom: 30px; padding-bottom: 20px;
+  gap: 10px; margin-bottom: 10px; padding-bottom: 30px;
   border-bottom: 1px solid var(--item-border);
 }
 /* Estilo para os botões DENTRO de global-event-actions */
@@ -203,7 +203,7 @@ section.add-block-form-section h3 { text-align: center; border-bottom: none; }
 
 
 /* Seção Nome do Evento */
-.event-name-section { margin-bottom: 30px; background-color: var(--item-bg); border: 1px solid var(--item-border); border-radius: 6px; padding: 15px 20px; box-shadow: 0 1px 3px var(--shadow-color); display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.event-name-section { margin-bottom: 10px; background-color: var(--item-bg); border: 1px solid var(--item-border); border-radius: 6px; padding: 15px 20px; box-shadow: 0 1px 3px var(--shadow-color); display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .event-name-section label { font-weight: 500; color: var(--text-color); flex-shrink: 0; }
 .event-name-section input { padding: 10px; border: 1px solid var(--input-border); border-radius: 4px; flex-grow: 1; font-size: 1.1em; font-weight: 500; font-family: inherit; background-color: var(--input-bg); color: var(--input-text); min-width: 200px; }
 
@@ -235,15 +235,15 @@ button.next-block-button:hover { background-color: var(--primary-hover-color); }
 .current-block-section.overrun-bg { background-color: var(--current-block-overrun-bg); }
 .current-block-section h3 { border-bottom-color: var(--item-border); }
 .current-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
-.current-block-header h4 { margin: 0; font-size: 1.4em; font-weight: 700; color: var(--primary-color); }
-.dark-theme .current-block-header h4 { color: var(--primary-color); }
+.current-block-header h4 { margin: 0; font-size: 1.4em; font-weight: 700; color: var(--text-color); }
+.dark-theme .current-block-header h4 { color: var(--text-color); }
 .current-block-timer { font-size: 1.6em; font-weight: 700; color: var(--text-color); white-space: nowrap; }
 .current-block-timer.overtime-indicator { color: var(--overtime-color); }
 .progress-bar-container { width: 100%; height: 10px; background-color: var(--progress-track-color); border-radius: 5px; overflow: hidden; margin-top: 8px; margin-bottom: 15px; }
 .progress-bar { height: 100%; background-color: var(--primary-color); border-radius: 5px 0 0 5px; transition: width 0.2s linear, background-color 0.3s ease; }
 .progress-bar.progress-overrun { background-color: var(--progress-overrun-bg); border-radius: 5px; }
 .current-block-section label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: 500; color: var(--text-muted-color); font-size: 0.9em;}
-.current-block-section textarea { width: 100%; min-height: 120px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--input-text); border-radius: 4px; padding: 10px; font-family: inherit; font-size: 1em; margin-top: 5px; box-sizing: border-box; resize: vertical; }
+.current-block-section textarea { width: 100%; min-height: 180px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--input-text); border-radius: 4px; padding: 10px; font-family: inherit; font-size: 1em; margin-top: 5px; box-sizing: border-box; resize: vertical; }
 
 /* Lista de Blocos (Layout interno reorganizado) */
 ul { list-style: none; padding: 0; }
@@ -283,10 +283,10 @@ p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-s
   main { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.5fr); gap: 25px 30px; align-items: start; }
   /* Posicionamento das seções */
   .global-event-actions { grid-column: 1 / 3; grid-row: 1; padding-bottom: 20px; margin-bottom: 0; border-bottom: 1px solid var(--item-border); justify-content: flex-start; }
-  .event-name-section { grid-column: 1 / 3; grid-row: 2; }
+  .event-name-section { grid-column: 1 ; grid-row: 2; }
   .event-status-section { grid-column: 1; grid-row: 3; }
   .add-block-form-section { grid-column: 1; grid-row: 4; }
-  .current-block-section { grid-column: 2; grid-row: 3; grid-row-end: span 2; /* Faz ocupar espaço da linha 3 e 4 */ } /* Ajuste para ocupar mais espaço vertical */
+  .current-block-section { grid-column: 2; grid-row: 2; grid-row-end: span 3; /* Faz ocupar espaço da linha 2, 3  e 4 */ } /* Ajuste para ocupar mais espaço vertical */
   .block-list-section { grid-column: 1; grid-row: 5; grid-column-end: span 2;} /* Ajuste para ocupar mais espaço vertical */
 
    /* Ajustes de margem */
