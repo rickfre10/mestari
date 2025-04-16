@@ -1,13 +1,10 @@
 <script setup>
 // ----- BLOCO SCRIPT SETUP -----
-// (Todo o script setup como estava na última versão funcional, sem mudanças)
+// (Todo o script setup como estava na última versão funcional, sem mudanças na lógica)
 import { ref, onMounted, onUnmounted, watchEffect, computed } from 'vue'
 const event = ref({ eventName: 'Meu Evento Padrão', blocks: [] });
-const newBlockName = ref('');
-const newBlockDurationString = ref('00:01:00');
-const currentBlockIndex = ref(null);
-const isDarkMode = ref(false);
-const fileInputRef = ref(null);
+const newBlockName = ref(''); const newBlockDurationString = ref('00:01:00');
+const currentBlockIndex = ref(null); const isDarkMode = ref(false); const fileInputRef = ref(null);
 function formatTime(totalSeconds) { if (isNaN(totalSeconds) || !isFinite(totalSeconds)) { return '00:00:00'; } const absSeconds = Math.abs(totalSeconds); const hours = Math.floor(absSeconds / 3600); const minutes = Math.floor((absSeconds % 3600) / 60); const seconds = Math.floor(absSeconds % 60); return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`; }
 function parseTimeToSeconds(timeString) { if (!timeString || typeof timeString !== 'string') return null; const parts = String(timeString).split(':').map(part => parseInt(part, 10)); let seconds = 0; if (parts.length === 3) { if (isNaN(parts[0]) || isNaN(parts[1]) || isNaN(parts[2]) || parts[1] >= 60 || parts[2] >= 60 || parts[1] < 0 || parts[2] < 0 || parts[0] < 0) return null; seconds = (parts[0] * 3600) + (parts[1] * 60) + parts[2]; } else if (parts.length === 2) { if (isNaN(parts[0]) || isNaN(parts[1]) || parts[0] >= 60 || parts[1] >= 60 || parts[0] < 0 || parts[1] < 0 ) return null; seconds = (parts[0] * 60) + parts[1]; } else if (parts.length === 1) { if (isNaN(parts[0]) || parts[0] < 0) return null; seconds = parts[0]; } else { return null; } return seconds; }
 const statusMap = { idle: 'Ocioso', running: 'Rodando', paused: 'Pausado', completed: 'Concluído', overrun: 'Estourado' };
@@ -36,8 +33,8 @@ function moveBlockDown(index) { if (index < event.value.blocks.length - 1) { con
 function startNewEvent() { if (confirm('Isso limpará o evento atual (nome e blocos). Deseja continuar?')) { event.value = { eventName: 'Novo Evento', blocks: [] }; currentBlockIndex.value = null; console.log("Novo evento iniciado."); } }
 function resetEntireEvent() { if (confirm('Tem certeza que deseja resetar TODOS os blocos?')) { currentBlockIndex.value = null; event.value.blocks.forEach(block => { block.status = 'idle'; block.elapsedTime = 0; block.completionDelay = null; }); console.log("Evento resetado."); } }
 function saveEventToFile() { try { const eventData = event.value; const dataStr = JSON.stringify(eventData, null, 2); const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; const filename = (eventData.eventName || 'mestari-evento').replace(/[^a-z0-9_ .-]/gi, '_') + '.json'; link.download = filename; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); } catch (error) { console.error("Erro ao salvar:", error); alert("Erro ao salvar evento."); } }
-function triggerFileInput() { fileInputRef.value?.click(); }
-function loadEventFromFile(e) { const file = e.target.files?.[0]; if (!file) return; if (file.type && file.type !== 'application/json') { alert('Selecione um arquivo .json.'); if(e.target) e.target.value = null; return; } const reader = new FileReader(); reader.onload = (res) => { try { const fileContent = res.target?.result; if (typeof fileContent !== 'string') throw new Error("Não foi possível ler o conteúdo."); const loadedData = JSON.parse(fileContent); if (typeof loadedData.eventName === 'string' && Array.isArray(loadedData.blocks)) { const isValidBlocks = loadedData.blocks.every(b => typeof b.id === 'number' && typeof b.name === 'string' && typeof b.duration === 'number' && b.duration >= 0 && typeof b.elapsedTime === 'number' && b.elapsedTime >= 0 && typeof b.status === 'string'); if (isValidBlocks) { event.value = { eventName: loadedData.eventName, blocks: loadedData.blocks.map(b => ({ id: b.id, name: b.name, duration: b.duration, elapsedTime: b.elapsedTime ?? 0, status: b.status ?? 'idle', notes: b.notes ?? '', completionDelay: b.completionDelay ?? null })) }; currentBlockIndex.value = null; alert('Evento carregado!'); } else { throw new Error("Estrutura de blocos inválida."); } } else { throw new Error("Estrutura de evento inválida."); } } catch (error) { console.error("Erro ao carregar:", error); alert(`Erro ao carregar: ${error.message}`); } finally { if (e.target) e.target.value = null; } }; reader.onerror = (err) => { console.error("Erro ao ler:", err); alert("Erro ao ler arquivo."); if(e.target) e.target.value = null; }; reader.readAsText(file); }
+function triggerFileInput() { fileInputRef.value?.click(); console.log("Acionando input file..."); }
+function loadEventFromFile(e) { const file = e.target.files?.[0]; console.log("Arquivo selecionado:", file?.name); if (!file) return; if (file.type && file.type !== 'application/json') { alert('Selecione um arquivo .json.'); if(e.target) e.target.value = null; return; } const reader = new FileReader(); reader.onload = (res) => { try { const fileContent = res.target?.result; if (typeof fileContent !== 'string') throw new Error("Não foi possível ler o conteúdo."); const loadedData = JSON.parse(fileContent); if (typeof loadedData.eventName === 'string' && Array.isArray(loadedData.blocks)) { const isValidBlocks = loadedData.blocks.every(b => typeof b.id === 'number' && typeof b.name === 'string' && typeof b.duration === 'number' && b.duration >= 0 && typeof b.elapsedTime === 'number' && b.elapsedTime >= 0 && typeof b.status === 'string'); if (isValidBlocks) { event.value = { eventName: loadedData.eventName, blocks: loadedData.blocks.map(b => ({ id: b.id, name: b.name, duration: b.duration, elapsedTime: b.elapsedTime ?? 0, status: b.status ?? 'idle', notes: b.notes ?? '', completionDelay: b.completionDelay ?? null })) }; currentBlockIndex.value = null; alert('Evento carregado!'); } else { throw new Error("Estrutura de blocos inválida."); } } else { throw new Error("Estrutura de evento inválida."); } } catch (error) { console.error("Erro ao carregar:", error); alert(`Erro ao carregar: ${error.message}`); } finally { if (e.target) e.target.value = null; } }; reader.onerror = (err) => { console.error("Erro ao ler:", err); alert("Erro ao ler arquivo."); if(e.target) e.target.value = null; }; reader.readAsText(file); }
 function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo Claro' : '🌙 Modo Noturno'; });
 
@@ -49,51 +46,43 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
     <header>
       <h1>Mestari ⏱️</h1>
       <div class="header-actions">
+          <a href="http://link.mercadopago.com.br/rickfre" target="_blank" rel="noopener noreferrer"
+             class="theme-toggle-button coffee-button" title="Apoie o desenvolvedor!">
+             Me paga um café? ☕️
+          </a>
+          <button @click="toggleTheme" class="theme-toggle-button">
+            {{ themeButtonText }}
+          </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="global-event-actions">
           <button @click="startNewEvent" class="header-button new-event" title="Limpar e Iniciar Novo Evento">✨ Novo evento</button>
           <button @click="triggerFileInput" class="header-button" title="Carregar Evento de Arquivo JSON">⬆️ Subir evento</button>
           <input type="file" accept=".json,application/json" @change="loadEventFromFile" ref="fileInputRef" style="display: none;">
           <button @click="saveEventToFile" class="header-button" title="Salvar Evento Atual em Arquivo JSON">💾 Salvar evento</button>
           <button @click="resetEntireEvent" class="header-button reset-event" title="Resetar Todos os Blocos">↻ Resetar Evento</button>
-          <a href="http://link.mercadopago.com.br/rickfre" target="_blank" rel="noopener noreferrer" class="header-button coffee-button">Me paga um café? ☕️</a>
-          <button @click="toggleTheme" class="theme-toggle-button"> {{ themeButtonText }} </button>
-      </div>
-    </header>
+      </section>
 
-    <main>
       <section class="event-name-section">
           <label for="eventNameInput">Nome do Evento:</label>
           <input title="Nome do Evento" type="text" id="eventNameInput" v-model="event.eventName">
       </section>
 
       <section class="event-status-section">
-        <h3>Status Geral do Evento</h3>
-        <div class="status-grid">
-           <div class="status-item"><span>Planejado</span><strong>{{ totalPlannedDuration }}</strong></div>
-           <div class="status-item"><span>Decorrido</span><strong>{{ formatTime(totalEventElapsedTime) }}</strong></div>
-           <div class="status-item"><span>Atraso / Folga Acumulado</span><strong :class="{ delay: cumulativeEventDelay.seconds > 5, slack: cumulativeEventDelay.seconds < -5 }">{{ cumulativeEventDelay.sign }}{{ cumulativeEventDelay.time }}</strong></div>
-        </div>
+        <h3>Status Geral do Evento</h3><div class="status-grid"><div class="status-item"><span>Planejado</span><strong>{{ totalPlannedDuration }}</strong></div><div class="status-item"><span>Decorrido</span><strong>{{ formatTime(totalEventElapsedTime) }}</strong></div><div class="status-item"><span>Atraso / Folga Acumulado</span><strong :class="{ delay: cumulativeEventDelay.seconds > 5, slack: cumulativeEventDelay.seconds < -5 }">{{ cumulativeEventDelay.sign }}{{ cumulativeEventDelay.time }}</strong></div></div>
       </section>
 
       <section class="current-block-section" v-if="currentBlock" :class="{ 'overrun-bg': currentBlock.status === 'overrun' || currentBlock.elapsedTime > currentBlock.duration }">
-         <h3>Agora:</h3>
-         <div class="current-block-header"><h4>{{ currentBlock.name || 'Bloco Atual' }}</h4><span class="current-block-timer" :class="{ 'overtime-indicator': currentBlock.elapsedTime > currentBlock.duration }">{{ currentBlockDisplayTime }}</span></div>
-         <div class="progress-bar-container" :title="`Progresso: ${Math.min(currentBlock.elapsedTime, currentBlock.duration)} / ${currentBlock.duration}s`"><div class="progress-bar" :style="{ width: currentBlockProgress + '%' }" :class="{ 'progress-overrun': currentBlock.elapsedTime > currentBlock.duration }"></div></div>
-         <label :for="'notes-' + currentBlock.id">Pauta e Anotações:</label><textarea :id="'notes-' + currentBlock.id" v-model="currentBlock.notes"></textarea>
-         <button @click="goToNextBlock" class="next-block-button">Próximo Bloco ▶▶</button>
+         <h3>Agora:</h3><div class="current-block-header"><h4>{{ currentBlock.name || 'Bloco Atual' }}</h4><span class="current-block-timer" :class="{ 'overtime-indicator': currentBlock.elapsedTime > currentBlock.duration }">{{ currentBlockDisplayTime }}</span></div><div class="progress-bar-container" :title="`Progresso: ${Math.min(currentBlock.elapsedTime, currentBlock.duration)} / ${currentBlock.duration}s`"><div class="progress-bar" :style="{ width: currentBlockProgress + '%' }" :class="{ 'progress-overrun': currentBlock.elapsedTime > currentBlock.duration }"></div></div><label :for="'notes-' + currentBlock.id">Pauta e Anotações:</label><textarea :id="'notes-' + currentBlock.id" v-model="currentBlock.notes"></textarea><button @click="goToNextBlock" class="next-block-button">Próximo Bloco ▶▶</button>
       </section>
       <section class="current-block-section" v-else>
-         <h3>Nenhum bloco ativo</h3>
-         <p v-if="event.blocks.length > 0 && event.blocks.some(b => b.status === 'idle')">Use o botão "Iniciar" na lista abaixo ou clique aqui para iniciar o próximo bloco ocioso.</p>
-         <p v-else-if="event.blocks.length > 0">Todos os blocos foram concluídos.</p>
-         <p v-else>Adicione blocos ao evento para começar.</p>
-         <button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button">Iniciar Evento / Próximo Bloco ▶▶</button>
+         <h3>Nenhum bloco ativo</h3><p v-if="event.blocks.length > 0 && event.blocks.some(b => b.status === 'idle')">Use o botão "Iniciar" na lista abaixo ou clique aqui para iniciar o próximo bloco ocioso.</p><p v-else-if="event.blocks.length > 0">Todos os blocos foram concluídos.</p><p v-else>Adicione blocos ao evento para começar.</p><button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button">Iniciar Evento / Próximo Bloco ▶▶</button>
       </section>
 
       <section class="add-block-form-section">
-        <h3>Adicionar Novo Bloco</h3>
-        <div><label for="blockName">Nome do Bloco: </label><input type="text" id="blockName" v-model="newBlockName" placeholder="Nome do bloco"/></div>
-        <div><label for="blockDuration">Duração (HH:MM:SS): </label><input type="text" id="blockDuration" v-model="newBlockDurationString" placeholder="HH:MM:SS ou Segundos"/></div>
-        <button @click="addBlock">Adicionar Bloco</button>
+         <h3>Adicionar Novo Bloco</h3><div><label for="blockName">Nome do Bloco: </label><input type="text" id="blockName" v-model="newBlockName" placeholder="Nome do bloco"/></div><div><label for="blockDuration">Duração (HH:MM:SS): </label><input type="text" id="blockDuration" v-model="newBlockDurationString" placeholder="HH:MM:SS ou Segundos"/></div><button @click="addBlock">Adicionar Bloco</button>
       </section>
 
       <section class="block-list-section">
@@ -111,15 +100,13 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
                 </span>
             </div>
             <div class="block-actions-row">
-                <span class="control-buttons-group">
-                  <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" title="Iniciar">▶</button>
+                <span class="control-buttons-group"> <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" title="Iniciar">▶</button>
                   <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" title="Pausar">❚❚</button>
                   <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" title="Retomar">►</button>
                   <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" title="Resetar">↻</button>
                   <button @click="deleteBlock(block.id)" class="control-button delete" title="Deletar">🗑</button>
                 </span>
-                <span class="reorder-buttons-group">
-                  <button @click="moveBlockUp(index)" :disabled="index === 0" title="Mover para cima">⬆️</button>
+                <span class="reorder-buttons-group"> <button @click="moveBlockUp(index)" :disabled="index === 0" title="Mover para cima">⬆️</button>
                   <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" title="Mover para baixo">⬇️</button>
                 </span>
             </div>
@@ -136,52 +123,99 @@ const themeButtonText = computed(() => { return isDarkMode.value ? '☀️ Modo 
 
 <style scoped>
 /* ----- BLOCO STYLE SCOPED ----- */
-/* (Todo o CSS anterior, incluindo variáveis, tema escuro, etc...) */
-/* Adiciona o bloco @media no final */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
-.app-container { /* ... (Variáveis Light/Dark como antes) ... */ --primary-color: #6821ff; --primary-hover-color: #551adf; --bg-color: #ffffff; --text-color: #333333; --text-muted-color: #777777; --header-bg: var(--primary-color); --header-text: #ffffff; --button-text: #ffffff; --item-bg: #f8f9fa; --item-border: #dee2e6; --item-active-bg: #e8e0ff; --item-active-border: var(--primary-color); --input-bg: #ffffff; --input-border: #ced4da; --input-text: #495057; --shadow-color: rgba(0,0,0,0.05); --h2-border-color: #dddddd; --overtime-color: #dc3545; --delay-color: var(--overtime-color); --slack-color: #28a745; --progress-track-color: #e9ecef; --progress-overrun-bg: var(--overtime-color); --current-block-overrun-bg: #ffebee; --btn-start-bg: #28a745; --btn-pause-bg: #ffc107; --btn-pause-text: #333; --btn-resume-bg: #17a2b8; --btn-reset-bg: #6c757d; --btn-delete-bg: #dc3545; --btn-reorder-bg: #f0f0f0; --btn-reorder-text: #555; --btn-reorder-hover-bg: #e0e0e0; --btn-reset-event-bg: #fd7e14; --btn-reset-event-hover-bg: #e86a00; --btn-coffee-bg: #3c2a1e; --btn-coffee-hover-bg: #5a4030; --btn-new-event-bg: #0dcaf0; --btn-new-event-hover-bg: #0baccc; font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-color); min-height: 100vh; transition: background-color 0.3s ease, color 0.3s ease; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; /*max-width: 800px; margin: 0 auto*/; padding-bottom: 30px; }
+
+/* Variáveis e Estilos Gerais */
+.app-container { /* ... (Variáveis Light/Dark como antes) ... */ --primary-color: #6821ff; --primary-hover-color: #551adf; --bg-color: #ffffff; --text-color: #333333; --text-muted-color: #777777; --header-bg: var(--primary-color); --header-text: #ffffff; --button-text: #ffffff; --item-bg: #f8f9fa; --item-border: #dee2e6; --item-active-bg: #e8e0ff; --item-active-border: var(--primary-color); --input-bg: #ffffff; --input-border: #ced4da; --input-text: #495057; --shadow-color: rgba(0,0,0,0.05); --h2-border-color: #dddddd; --overtime-color: #dc3545; --delay-color: var(--overtime-color); --slack-color: #28a745; --progress-track-color: #e9ecef; --progress-overrun-bg: var(--overtime-color); --current-block-overrun-bg: #ffebee; --btn-start-bg: #28a745; --btn-pause-bg: #ffc107; --btn-pause-text: #333; --btn-resume-bg: #17a2b8; --btn-reset-bg: #6c757d; --btn-delete-bg: #dc3545; --btn-reorder-bg: #f0f0f0; --btn-reorder-text: #555; --btn-reorder-hover-bg: #e0e0e0; --btn-reset-event-bg: #fd7e14; --btn-reset-event-hover-bg: #e86a00; --btn-coffee-bg: #3c2a1e; --btn-coffee-hover-bg: #5a4030; --btn-new-event-bg: #0dcaf0; --btn-new-event-hover-bg: #0baccc; font-family: 'Poppins', sans-serif; background-color: var(--bg-color); color: var(--text-color); min-height: 100vh; transition: background-color 0.3s ease, color 0.3s ease; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
 .app-container.dark-theme { /* ... (Variáveis Dark como antes) ... */ --primary-color: #8a5fff; --primary-hover-color: #a082ff; --bg-color: #1a1d24; --text-color: #e0e0e0; --text-muted-color: #a0a0a0; --header-bg: #2f1072; --header-text: #e0e0e0; --button-text: #ffffff; --item-bg: #2c3e50; --item-border: #4b5a6a; --item-active-bg: #3a2c50; --item-active-border: var(--primary-color); --input-bg: #252a33; --input-border: #4b5a6a; --input-text: #e0e0e0; --shadow-color: rgba(0,0,0,0.3); --h2-border-color: #4b5a6a; --overtime-color: #ff6b6b; --progress-track-color: #495057; --progress-overrun-bg: var(--overtime-color); --current-block-overrun-bg: #4d2a2f; --btn-pause-text: #333; --btn-reorder-bg: #3a4a5a; --btn-reorder-text: #ccc; --btn-reorder-hover-bg: #4b5a6a; --btn-reset-event-bg: #fd7e14; --btn-reset-event-hover-bg: #e86a00; --btn-coffee-bg: #c6a78a; --btn-coffee-hover-bg: #ddbb9f; --btn-new-event-bg: #0dcaf0; --btn-new-event-hover-bg: #31d2f2;}
-header { background-color: var(--header-bg); color: var(--header-text); padding: 15px 25px; margin-bottom: 30px; box-shadow: 0 2px 5px var(--shadow-color); border-radius: 0 0 10px 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+
+/* Header */
+header { background-color: var(--header-bg); color: var(--header-text); padding: 15px 25px; margin-bottom: 0; /* Remove margem inferior do header */ box-shadow: 0 2px 5px var(--shadow-color); border-radius: 0 0 10px 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 h1 { color: var(--header-text); text-align: left; margin: 0; font-size: 1.7em; font-weight: 700; flex-grow: 1; }
 .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
-.header-button { background-color: rgba(255, 255, 255, 0.15); color: var(--header-text); border: 1px solid rgba(255, 255, 255, 0.5); padding: 6px 12px; border-radius: 5px; font-size: 0.85em; cursor: pointer; margin: 0; transition: background-color 0.2s ease; font-family: inherit; display: inline-block; text-decoration: none; white-space: nowrap; }
+.header-button { /* Estilo base para botões que *eram* do header */ background-color: rgba(255, 255, 255, 0.15); color: var(--header-text); border: 1px solid rgba(255, 255, 255, 0.5); padding: 6px 12px; border-radius: 5px; font-size: 0.85em; cursor: pointer; margin: 0; transition: background-color 0.2s ease; font-family: inherit; display: inline-block; text-decoration: none; white-space: nowrap; }
 .dark-theme .header-button { background-color: rgba(0, 0, 0, 0.2); border-color: rgba(255, 255, 255, 0.4); }
 .header-button:hover { background-color: rgba(255, 255, 255, 0.3); }
 .dark-theme .header-button:hover { background-color: rgba(0, 0, 0, 0.4); }
 .header-button.reset-event { background-color: var(--btn-reset-event-bg); border-color: transparent; }
 .header-button.reset-event:hover { background-color: var(--btn-reset-event-hover-bg); }
-.header-button.coffee-button { background-color: var(--btn-coffee-bg); border-color: transparent; }
-.header-button.coffee-button:hover { background-color: var(--btn-coffee-hover-bg); }
+/* Botão Café agora usa estilo do theme-toggle mas com cor de fundo própria */
+.coffee-button { background-color: var(--btn-coffee-bg) !important; /* Usa important para sobrescrever se necessário */ border-color: transparent !important; }
+.coffee-button:hover { background-color: var(--btn-coffee-hover-bg) !important; }
 .header-button.new-event { background-color: var(--btn-new-event-bg); border-color: transparent; color: #000; }
 .header-button.new-event:hover { background-color: var(--btn-new-event-hover-bg); }
-.theme-toggle-button { background-color: rgba(255, 255, 255, 0.15); color: var(--header-text); border: 1px solid rgba(255, 255, 255, 0.5); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.8em; font-family: inherit; display: inline-block; margin: 0; transition: background-color 0.2s ease; }
+.theme-toggle-button { background-color: rgba(255, 255, 255, 0.15); color: var(--header-text); border: 1px solid rgba(255, 255, 255, 0.5); padding: 6px 12px; border-radius: 20px; /* Mantém arredondado */ cursor: pointer; font-size: 0.8em; font-family: inherit; display: inline-block; margin: 0; transition: background-color 0.2s ease; text-decoration: none; /* Garante que o link do café não tenha sublinhado */ white-space: nowrap; }
 .dark-theme .theme-toggle-button { background-color: rgba(0, 0, 0, 0.2); border-color: rgba(255, 255, 255, 0.4); }
 .theme-toggle-button:hover { background-color: rgba(255, 255, 255, 0.3); }
 .dark-theme .theme-toggle-button:hover { background-color: rgba(0, 0, 0, 0.4); }
-main { padding: 0 20px; } /* Mantém padding lateral geral */
-section { margin-bottom: 25px; } /* Margem padrão entre seções */
-h2 { margin-top: 25px; border-bottom: 2px solid var(--h2-border-color); padding-bottom: 8px; color: var(--text-color); font-weight: 700; font-size: 1.4em; margin-bottom: 20px; }
+
+/* Main, Sections, H2, H3 */
+main { padding: 20px; } /* Adiciona padding ao redor do main */
+section { margin-bottom: 30px; } /* Espaço padrão entre seções */
+h2 { margin-top: 0; /* Remove margem topo do H2 da lista */ border-bottom: 2px solid var(--h2-border-color); padding-bottom: 8px; color: var(--text-color); font-weight: 700; font-size: 1.4em; margin-bottom: 20px; }
 h3 { text-align: left; margin-top:0; margin-bottom: 20px; color: var(--text-muted-color); font-weight: 500; font-size: 1.2em; border-bottom: 1px solid var(--item-border); padding-bottom: 10px; }
-section.add-block-form-section h3 { text-align: center; border-bottom: none; } /* Centraliza só o do form */
-.event-name-section { margin-bottom: 25px; background-color: var(--item-bg); border: 1px solid var(--item-border); border-radius: 6px; padding: 15px 20px; box-shadow: 0 1px 3px var(--shadow-color); display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+section.add-block-form-section h3 { text-align: center; border-bottom: none; }
+
+/* NOVO: Seção de Ações Globais do Evento */
+.global-event-actions {
+  display: flex;
+  justify-content: center; /* Centraliza os botões */
+  align-items: center;
+  flex-wrap: wrap; /* Quebra linha se necessário */
+  gap: 10px; /* Espaço entre botões */
+  margin-bottom: 30px; /* Espaço antes do Nome do Evento */
+  padding-bottom: 20px; /* Espaço abaixo */
+  border-bottom: 1px solid var(--item-border); /* Linha separadora */
+}
+/* Botões dentro desta seção usam o estilo .header-button */
+.global-event-actions .header-button {
+   font-size: 0.9em; /* Pode ajustar tamanho */
+   /* Mantém cores definidas pelas classes específicas (new-event, reset-event etc) */
+}
+/* Sobrescreve cor de fundo padrão do header-button se necessário */
+.global-event-actions button.header-button:not(.new-event):not(.reset-event) {
+    background-color: var(--primary-color); /* Roxo claro */
+    border-color: transparent;
+}
+.global-event-actions button.header-button:not(.new-event):not(.reset-event):hover {
+    background-color: var(--primary-hover-color);
+}
+/* Específico para modo escuro se precisar diferenciar mais */
+.dark-theme .global-event-actions button.header-button:not(.new-event):not(.reset-event) {
+     background-color: var(--primary-color); /* Roxo mais claro no dark */
+}
+.dark-theme .global-event-actions button.header-button:not(.new-event):not(.reset-event):hover {
+     background-color: var(--primary-hover-color);
+}
+
+
+/* Seção Nome do Evento */
+.event-name-section { margin-bottom: 30px; /* Aumenta espaço abaixo */ background-color: var(--item-bg); border: 1px solid var(--item-border); border-radius: 6px; padding: 15px 20px; box-shadow: 0 1px 3px var(--shadow-color); display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .event-name-section label { font-weight: 500; color: var(--text-color); flex-shrink: 0; }
 .event-name-section input { padding: 10px; border: 1px solid var(--input-border); border-radius: 4px; flex-grow: 1; font-size: 1.1em; font-weight: 500; font-family: inherit; background-color: var(--input-bg); color: var(--input-text); min-width: 200px; }
+
+/* Formulário Add Bloco */
 .add-block-form-section { background-color: var(--item-bg); border: 1px solid var(--item-border); border-radius: 6px; padding: 20px; box-shadow: 0 1px 3px var(--shadow-color); }
 .add-block-form-section div { margin-bottom: 15px; display: flex; align-items: center; flex-wrap: wrap; }
 .add-block-form-section label { margin-right: 10px; width: 150px; text-align: right; flex-shrink: 0; font-weight: 500; color: var(--text-color); margin-bottom: 5px; }
 .add-block-form-section input { padding: 10px; border: 1px solid var(--input-border); border-radius: 4px; flex-grow: 1; font-size: 1em; font-family: inherit; background-color: var(--input-bg); color: var(--input-text); margin-bottom: 5px; }
 .add-block-form-section input::placeholder { color: var(--text-muted-color); opacity: 0.8; }
-.add-block-form-section button { margin-top: 10px; margin-bottom: 0; width: 100%; }
-button { display: block; margin: 20px auto 10px auto; padding: 12px 25px; cursor: pointer; background-color: var(--primary-color); color: var(--button-text); border: none; border-radius: 5px; font-size: 1.1em; font-weight: 500; font-family: inherit; transition: background-color 0.2s ease; }
-button:hover { background-color: var(--primary-hover-color); }
-.next-block-button { background-color: var(--primary-color); }
-.next-block-button:hover { background-color: var(--primary-hover-color); }
+.add-block-form-section button { margin-top: 10px; margin-bottom: 0; width: 100%; } /* Botão Add Bloco */
+
+/* Botões Principais (Próximo Bloco, Iniciar Evento - fora da lista) */
+button.next-block-button { /* Seletor mais específico */ display: block; margin: 20px auto 10px auto; padding: 12px 25px; cursor: pointer; background-color: var(--primary-color); color: var(--button-text); border: none; border-radius: 5px; font-size: 1.1em; font-weight: 500; font-family: inherit; transition: background-color 0.2s ease; }
+button.next-block-button:hover { background-color: var(--primary-hover-color); }
+
+
+/* Status Geral */
 .event-status-section { background-color: var(--item-bg); border: 1px solid var(--item-border); border-radius: 6px; padding: 20px; box-shadow: 0 1px 3px var(--shadow-color); }
 .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; text-align: center; }
 .status-item span { display: block; font-size: 0.9em; color: var(--text-muted-color); margin-bottom: 5px; }
 .status-item strong { font-size: 1.6em; font-weight: 700; color: var(--text-color); display: block; }
 .status-item .delay { color: var(--delay-color); }
 .status-item .slack { color: var(--slack-color); }
+
+/* Bloco Atual / Agora */
 .current-block-section { background-color: var(--item-bg); border: 1px solid var(--item-border); border-radius: 6px; padding: 20px; box-shadow: 0 1px 3px var(--shadow-color); transition: background-color 0.3s ease; }
 .current-block-section.overrun-bg { background-color: var(--current-block-overrun-bg); }
 .current-block-section h3 { border-bottom-color: var(--item-border); }
@@ -195,21 +229,27 @@ button:hover { background-color: var(--primary-hover-color); }
 .progress-bar.progress-overrun { background-color: var(--progress-overrun-bg); border-radius: 5px; }
 .current-block-section label { display: block; margin-top: 15px; margin-bottom: 5px; font-weight: 500; color: var(--text-muted-color); font-size: 0.9em;}
 .current-block-section textarea { width: 100%; min-height: 120px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--input-text); border-radius: 4px; padding: 10px; font-family: inherit; font-size: 1em; margin-top: 5px; box-sizing: border-box; resize: vertical; }
+
+/* Lista de Blocos */
 ul { list-style: none; padding: 0; }
 li { background-color: var(--item-bg); border: 1px solid var(--item-border); color: var(--text-color); padding: 15px; margin-bottom: 12px; border-radius: 6px; font-size: 1em; display: block; box-shadow: 0 1px 3px var(--shadow-color); transition: box-shadow 0.2s ease, border-left 0.3s ease, background-color 0.3s ease; border-left: 5px solid transparent; }
 li:hover { box-shadow: 0 3px 6px var(--shadow-color); }
 li.active { background-color: var(--item-active-bg); border-left: 5px solid var(--item-active-border); font-weight: 500; }
-.block-info { margin-bottom: 10px; line-height: 1.4; overflow-wrap: break-word; } /* Info do Bloco */
-.block-actions-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--item-border); } /* Linha de Botões */
-.control-buttons-group { display: inline-flex; gap: 5px; flex-wrap: wrap; } /* Grupo Controle */
-.reorder-buttons-group { display: inline-flex; gap: 5px; flex-shrink: 0; } /* Grupo Reordenar */
-.notes-area { margin-top: 12px; width: 100%; } /* Area Notas na Lista */
+.block-info { margin-bottom: 10px; line-height: 1.4; overflow-wrap: break-word; }
+.block-actions-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--item-border); }
+.control-buttons-group { display: inline-flex; gap: 5px; flex-wrap: wrap; }
+.reorder-buttons-group { display: inline-flex; gap: 5px; flex-shrink: 0; }
+.notes-area { margin-top: 12px; width: 100%; }
 .notes-area textarea { width: 100%; min-height: 60px; border: 1px solid var(--input-border); background-color: var(--input-bg); color: var(--input-text); border-radius: 4px; padding: 8px; font-family: inherit; font-size: 0.95em; box-sizing: border-box; resize: vertical; }
 .overtime-indicator { color: var(--overtime-color); font-weight: bold; }
 .delay { color: var(--delay-color); }
 .slack { color: var(--slack-color); }
-li .block-info span .delay, li .block-info span .slack { font-weight: bold; font-size: 0.9em; margin-left: 5px; } /* Ajusta seletor */
+.block-info span .delay, .block-info span .slack { font-weight: bold; font-size: 0.9em; margin-left: 5px; }
+
+/* Mensagem de lista vazia */
 p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-size: 1.1em; }
+
+/* Botões de Controle na Lista */
 .control-button { display: inline-block; margin: 0; padding: 5px 8px; font-size: 1em; line-height: 1; cursor: pointer; color: var(--button-text); border: none; border-radius: 4px; vertical-align: middle; font-weight: normal; font-family: inherit; transition: opacity 0.2s ease, background-color 0.2s ease; }
 .control-button:hover { opacity: 0.85; }
 .control-button.start { background-color: var(--btn-start-bg); }
@@ -217,56 +257,25 @@ p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-s
 .control-button.resume { background-color: var(--btn-resume-bg); }
 .control-button.reset { background-color: var(--btn-reset-bg); }
 .control-button.delete { background-color: var(--btn-delete-bg); }
-.reorder-buttons-group button { background-color: var(--btn-reorder-bg); color: var(--btn-reorder-text); border: 1px solid var(--item-border); padding: 3px 8px; font-size: 1.2em; line-height: 1; cursor: pointer; border-radius: 3px; vertical-align: middle; }
+
+/* Botões Reordenar */
+.reorder-buttons-group button { background-color: var(--btn-reorder-bg); color: var(--btn-reorder-text); border: 1px solid var(--item-border); padding: 3px 8px; font-size: 1.2em; line-height: 1; /* margin-left removido, use gap */ cursor: pointer; border-radius: 3px; vertical-align: middle; }
 .reorder-buttons-group button:disabled { opacity: 0.4; cursor: not-allowed; }
 .reorder-buttons-group button:hover:not(:disabled) { background-color: var(--btn-reorder-hover-bg); }
 
-/* ----- NOVO: Estilos Grid Layout para Telas Maiores (ORDEM AJUSTADA) ----- */
-@media (min-width: 992px) { /* Ponto de quebra para Desktop/iPad Pro */
-
-  main { /* Aplica grid ao <main> */
-    display: grid;
-    /* Define 2 colunas: Esq (1fr), Dir (1.5fr - mais larga para lista), com Mins */
-    grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.5fr);
-    gap: 25px 30px; /* Espaço vertical e horizontal entre áreas */
-    align-items: start; /* Alinha itens no topo */
-  }
-
-  /* Posicionamento das seções na NOVA ORDEM */
-  .event-name-section {
-    grid-column: 1 / 3; /* Nome do Evento: Linha 1, Colunas 1-2 */
-    grid-row: 1;
-  }
-
-  .event-status-section {
-    grid-column: 1;     /* Status: Linha 2, Coluna Esquerda */
-    grid-row: 2;
-  }
-
-  .add-block-form-section {
-    grid-column: 1;     /* Adicionar Bloco: Linha 3, Coluna Esquerda */
-    grid-row: 3;
-  }
-
-  .current-block-section { /* "Agora:" (v-if/v-else) */
-    grid-column: 2;     /* Bloco Atual: Linha 2, Coluna Direita */
-    grid-row: 2;
-  }
-
-  .block-list-section {
-    grid-column: 2;     /* Lista de Blocos: Linha 3, Coluna Direita */
-    grid-row: 3;
-  }
-
-   /* Ajustes de margem dentro do grid */
-   main section { margin-bottom: 0; } /* Remove margem padrão */
-   /* Adiciona margem SÓ entre as linhas do grid (exceto nome do evento) */
-   .event-status-section, .current-block-section { margin-bottom: 25px; }
-   .add-block-form-section h3, .timer-list-section h2 { margin-top: 0; } /* Remove margem topo desnecessária */
-   .event-status h3, .current-block h3 { margin-top: 0; }
-   .event-name-section { margin-bottom: 30px; } /* Mantém margem maior abaixo do nome */
-
+/* ----- Estilos Grid Layout para Telas Maiores ----- */
+@media (min-width: 992px) { /* Ponto de quebra Desktop/iPad Pro */
+  main { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(400px, 1.5fr); /* Col Esq(1fr), Col Dir(1.5fr) */ gap: 25px 30px; align-items: start; }
+  .event-name-section { grid-column: 1 / 3; grid-row: 1; } /* Nome: Linha 1, Col 1-2 */
+  .event-status-section { grid-column: 1; grid-row: 2; } /* Status: Linha 2, Col Esq */
+  .add-block-form-section { grid-column: 1; grid-row: 3; } /* Add Bloco: Linha 3, Col Esq */
+  .current-block-section { grid-column: 2; grid-row: 2; } /* Agora: Linha 2, Col Dir */
+  .block-list-section { grid-column: 2; grid-row: 3; } /* Lista Blocos: Linha 3, Col Dir */
+  main section { margin-bottom: 0; } /* Remove margem padrão no grid */
+  .event-status-section, .current-block-section { margin-bottom: 25px; } /* Margem entre linhas 2 e 3 */
+  .add-block-form-section h3, .timer-list-section h2 { margin-top: 0; }
+  .event-status h3, .current-block h3 { margin-top: 0; }
+  .event-name-section { margin-bottom: 30px; }
 }
-/* ----- FIM: Estilos do Grid Layout ----- */
 
 </style>
