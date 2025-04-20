@@ -1,7 +1,9 @@
 Acessibilidade (a11y) - DONE
 Validação de Upload (JSON mais robusta) - DONE 
 Revisão de Casos Especiais (Lógica/Delay) - DONE
-Tooltips e Micro-interações
+Tooltips e Micro-interações - DONE
+fix: localStorage DONE 
+    o erro era que o watcheffect estava salvando o primeiro estado do app ao carregar (onmounted) ANTES DELE CONSULTAR E CARREGAR O localstorage, dessa forma ele sobreescrevia o armazenamento. Correção, alterar a função para watch e gerar o salvamento no localstorage após alguma modificação de estado. 
 Internacionalização (i18n PT/EN)
 Polimento Visual Geral
 Corrigir estilo do Nome do Evento (semibold, 1.3em) - Adiado
