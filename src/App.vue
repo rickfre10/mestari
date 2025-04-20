@@ -1,6 +1,6 @@
 <script setup>
 // ----- BLOCO SCRIPT SETUP -----
-import { ref, onMounted, onUnmounted, watchEffect, computed } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect, computed, watch } from 'vue'
 
 // --- ESTADO REATIVO ---
 const event = ref({ eventName: 'Meu Evento Padrão', blocks: [] });
@@ -9,6 +9,8 @@ const newBlockDurationString = ref('00:01:00'); // Input como string HH:MM:SS
 const currentBlockIndex = ref(null);
 const isDarkMode = ref(false);
 const fileInputRef = ref(null);
+const plannedTimeJustChanged = ref(false);
+let plannedTimeChangeTimeout = null;
 
 // --- VARIÁVEIS NÃO REATIVAS ---
 let intervalId = null;
@@ -85,22 +87,20 @@ const totalPlannedDuration = computed(() => {
   return formatTime(totalSeconds);
 });
 
+// Tempo total REAL decorrido no evento (LÓGICA REATORADA E SIMPLIFICADA)
 const totalEventElapsedTime = computed(() => {
-  let elapsedSeconds = 0;
-  for(const block of event.value.blocks) {
-    if (block.status === 'completed' || block.status === 'overrun') {
-      elapsedSeconds += block.elapsedTime;
-    } else if (block.status === 'running' || block.status === 'paused') {
-      const blockIndex = event.value.blocks.findIndex(b => b.id === block.id);
-      if(blockIndex === currentBlockIndex.value) {
-        elapsedSeconds += block.elapsedTime;
-        break;
-      } else if (block.status === 'paused') {
-        elapsedSeconds += block.elapsedTime;
-      }
+  console.log("Calculando totalEventElapsedTime (Lógica Refatorada)..."); // Log para debug
+  // Soma o elapsedTime de TODOS os blocos que não estão 'idle'
+  const elapsedSeconds = event.value.blocks.reduce((sum, block) => {
+    // Se o bloco não está ocioso (ou seja, rodou, pausou, completou ou estourou),
+    // adiciona o tempo real que foi gasto nele à soma.
+    if (block.status !== 'idle') {
+      return sum + (block.elapsedTime || 0); // Usa 0 se elapsedTime for undefined (segurança)
     }
-  }
-  return elapsedSeconds;
+    // Se o bloco está ocioso, não adiciona nada à soma.
+    return sum;
+  }, 0); // Inicia a soma com 0
+  return elapsedSeconds; // Retorna o total de segundos realmente decorridos em blocos não-ociosos
 });
 
 const cumulativeEventDelay = computed(() => {
@@ -113,6 +113,26 @@ const cumulativeEventDelay = computed(() => {
     time: formatTime(Math.abs(roundedDelay)),
     seconds: roundedDelay
   };
+});
+
+watch(totalPlannedDuration, (newValue, oldValue) => {
+  // Evita acionar na carga inicial ou se o valor não mudou
+  if (oldValue !== undefined && newValue !== oldValue) {
+    console.log(`Planejado mudou de ${oldValue} para ${newValue}. Acionando highlight.`);
+    plannedTimeJustChanged.value = true; // Ativa a classe CSS
+
+    // Limpa timeout anterior se houver (para mudanças rápidas)
+    if (plannedTimeChangeTimeout) {
+      clearTimeout(plannedTimeChangeTimeout);
+    }
+
+    // Define um timeout para remover a classe após a animação (ex: 1000ms)
+    plannedTimeChangeTimeout = setTimeout(() => {
+      plannedTimeJustChanged.value = false; // Desativa a classe CSS
+      plannedTimeChangeTimeout = null;
+      console.log("Highlight removido.");
+    }, 1000); // Duração em ms (deve ser igual ou maior que a animação CSS)
+  }
 });
 
 const currentBlock = computed(() => {
@@ -272,14 +292,45 @@ function resetBlock(blockId) {
   }
 }
 function deleteBlock(blockId) {
-  const index = event.value.blocks.findIndex(b => b.id === blockId);
-  if (index !== -1) {
-    const wasCurrent = (currentBlockIndex.value === index);
-    const isBeforeCurrent = (currentBlockIndex.value !== null && index < currentBlockIndex.value);
-    event.value.blocks.splice(index, 1);
-    if (wasCurrent) { currentBlockIndex.value = null; }
-    else if (isBeforeCurrent) { currentBlockIndex.value--; }
-  }
+    const index = event.value.blocks.findIndex(b => b.id === blockId);
+    if (index !== -1) {
+        const blockToDelete = event.value.blocks[index]; // Get block info before deleting
+        const wasCurrent = (currentBlockIndex.value === index);
+        const isBeforeCurrent = (currentBlockIndex.value !== null && index < currentBlockIndex.value);
+
+        // Remove the block from the array
+        event.value.blocks.splice(index, 1);
+        console.log(`Bloco '${blockToDelete.name || blockToDelete.id}' deletado.`);
+
+        if (wasCurrent) {
+            console.log("Bloco ativo foi deletado. Procurando próximo bloco ocioso...");
+            // Find the next idle block starting from the *same index*
+            // because splice shifted subsequent elements down.
+            let nextIdleIndex = -1;
+            for (let i = index; i < event.value.blocks.length; i++) {
+                 if (event.value.blocks[i].status === 'idle') {
+                     nextIdleIndex = i;
+                     break; // Found the first one
+                 }
+            }
+
+            if (nextIdleIndex !== -1) {
+                 // Found the next idle block
+                 currentBlockIndex.value = nextIdleIndex;
+                 event.value.blocks[nextIdleIndex].status = 'running'; // Start it
+                 console.log(`Iniciando próximo bloco ocioso automaticamente: Índice ${nextIdleIndex} ('${event.value.blocks[nextIdleIndex].name}')`);
+            } else {
+                 // No subsequent idle block found
+                 currentBlockIndex.value = null;
+                 console.log("Nenhum bloco ocioso encontrado para iniciar após a deleção.");
+            }
+        } else if (isBeforeCurrent) {
+            // If deleted a block BEFORE the active one, adjust the current index
+            currentBlockIndex.value--;
+            console.log("Índice do bloco ativo ajustado após deleção de item anterior.");
+        }
+        // If deleted block was AFTER current, currentBlockIndex remains unaffected.
+    }
 }
 function goToNextBlock() {
   let nextIndex = -1;
@@ -503,8 +554,10 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
         <h3>Status Geral do Evento</h3>
         <div class="status-grid">
           <div class="status-item">
-            <span>Planejado</span>
-            <strong>{{ totalPlannedDuration }}</strong>
+      <span>Planejado</span>
+      <strong :class="{ 'highlight-change': plannedTimeJustChanged }">
+          {{ totalPlannedDuration }}
+      </strong>
           </div>
           <div class="status-item">
             <span>Decorrido</span>
@@ -999,6 +1052,34 @@ p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-s
   .global-event-actions, .event-name-section, .event-status-section, .add-block-form-section, .current-block-section { margin-bottom: 15px; } /* Aplica gap vertical via margem (exceto última linha) */
   /* Zera margem topo para títulos dentro do grid */
   .add-block-form-section h3, .timer-list-section h2, .event-status-section h3, .current-block-section h3 { margin-top: 0; }
+}
+
+/* Define a animação de pulso/flash */
+@keyframes pulse-bg-light {
+  0%   { background-color: transparent; transform: scale(1); }
+  50%  { background-color: rgba(104, 33, 255, 0.2); /* Roxo primário claro semi-transparente */ transform: scale(1.05); }
+  100% { background-color: transparent; transform: scale(1); }
+}
+
+@keyframes pulse-bg-dark {
+  0%   { background-color: transparent; transform: scale(1); }
+  50%  { background-color: rgba(138, 95, 255, 0.3); /* Roxo primário escuro semi-transparente */ transform: scale(1.05); }
+  100% { background-color: transparent; transform: scale(1); }
+}
+
+/* Aplica a animação ao <strong> quando a classe está presente */
+.status-item strong.highlight-change {
+  animation: pulse-bg-light 1s ease-out; /* Duração de 1s */
+  border-radius: 4px; /* Para o fundo ficar contido */
+  /* display: inline-block; */ /* Talvez necessário se strong não se comportar bem */
+  padding: 0 4px; /* Pequeno padding para o fundo não colar no texto */
+  margin: 0 -4px; /* Compensa o padding */
+  transition: background-color 0.2s; /* Suaviza */
+}
+
+/* Sobrescreve a animação no tema escuro */
+.dark-theme .status-item strong.highlight-change {
+   animation-name: pulse-bg-dark;
 }
 
 </style>
