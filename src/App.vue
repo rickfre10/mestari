@@ -681,8 +681,9 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
         <button @click="addBlock" class="add-block-button">Adicionar Bloco</button>
       </section>
 
-      <section class="block-list-section">
+       <section class="block-list-section">
         <h2>Blocos do Evento:</h2>
+
         <ul v-if="event.blocks.length > 0">
           <li v-for="(block, index) in event.blocks" :key="block.id" :class="{ active: index === currentBlockIndex }">
             <div class="block-info">
@@ -697,15 +698,15 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
             </div>
             <div class="block-actions-row">
               <span class="control-buttons-group">
-                <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" title="Iniciar">▶</button>
-                <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" title="Pausar">❚❚</button>
-                <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" title="Retomar">►</button>
-                <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" title="Resetar">↻</button>
-                <button @click="deleteBlock(block.id)" class="control-button delete" title="Deletar">🗑</button>
+                <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" title="Iniciar Bloco">▶</button>
+                <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" title="Pausar Bloco">❚❚</button>
+                <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" title="Retomar Bloco">►</button>
+                <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" title="Resetar Bloco (Voltar para Ocioso)">↻</button>
+                <button @click="deleteBlock(block.id)" class="control-button delete" title="Deletar Bloco">🗑️</button>
               </span>
               <span class="reorder-buttons-group">
-                <button @click="moveBlockUp(index)" :disabled="index === 0" title="Mover para cima">⬆️</button>
-                <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" title="Mover para baixo">⬇️</button>
+                <button @click="moveBlockUp(index)" :disabled="index === 0" title="Mover Bloco Para Cima">⬆️</button>
+                <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" title="Mover Bloco Para Baixo">⬇️</button>
               </span>
             </div>
             <div class="notes-area">
@@ -713,8 +714,12 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
             </div>
           </li>
         </ul>
-        <p>Nenhum bloco adicionado a este evento ainda.</p> 
-        <p><em>Use o formulário 'Adicionar Novo Bloco' para começar!</em></p>
+
+        <div v-else class="empty-list-message">
+            <p>Nenhum bloco adicionado a este evento ainda.</p>
+            <p><em>Use o formulário 'Adicionar Novo Bloco' para começar!</em></p>
+        </div>
+
       </section>
     </main>
   </div>
