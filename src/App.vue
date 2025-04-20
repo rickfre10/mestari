@@ -352,26 +352,98 @@ function saveEventToFile() {
 function triggerFileInput() {
   fileInputRef.value?.click();
 }
+// Função atualizada para carregar e validar evento de arquivo JSON
 function loadEventFromFile(e) {
-  const file = e.target.files?.[0]; if (!file) return;
-  if (file.type && file.type !== 'application/json') { alert('Selecione um arquivo .json.'); if(e.target) e.target.value = null; return; }
+  const file = e.target.files?.[0];
+  console.log("Arquivo selecionado:", file?.name);
+  if (!file) return; // Sai se nenhum arquivo
+
+  // Verificação inicial de tipo (ajuda, mas não 100% garantido)
+  if (file.type && file.type !== 'application/json') {
+    alert('Arquivo inválido. Por favor, selecione um arquivo .json exportado pelo Mestari.');
+    if(e.target) e.target.value = null;
+    return;
+  }
+
   const reader = new FileReader();
+
   reader.onload = (res) => {
     try {
-      const fileContent = res.target?.result; if (typeof fileContent !== 'string') throw new Error("Não foi possível ler o conteúdo.");
-      const loadedData = JSON.parse(fileContent);
-      if (typeof loadedData.eventName === 'string' && Array.isArray(loadedData.blocks)) {
-        const isValidBlocks = loadedData.blocks.every(b => typeof b.id === 'number' && typeof b.name === 'string' && typeof b.duration === 'number' && b.duration >= 0 && typeof b.elapsedTime === 'number' && b.elapsedTime >= 0 && typeof b.status === 'string');
-        if (isValidBlocks) {
-          event.value = { eventName: loadedData.eventName, blocks: loadedData.blocks.map(b => ({ id: b.id, name: b.name, duration: b.duration, elapsedTime: b.elapsedTime ?? 0, status: b.status ?? 'idle', notes: b.notes ?? '', completionDelay: b.completionDelay ?? null })) };
-          currentBlockIndex.value = null; alert('Evento carregado!');
-        } else { throw new Error("Estrutura de blocos inválida."); }
-      } else { throw new Error("Estrutura de evento inválida."); }
-    } catch (error) { console.error("Erro ao carregar:", error); alert(`Erro ao carregar: ${error.message}`); }
-    finally { if (e.target) e.target.value = null; }
+      const fileContent = res.target?.result;
+      if (typeof fileContent !== 'string') {
+        throw new Error("Não foi possível ler o conteúdo do arquivo.");
+      }
+      const loadedData = JSON.parse(fileContent); // Tenta parsear
+
+      // --- VALIDAÇÃO ROBUSTA DA ESTRUTURA ---
+      // 1. Valida estrutura geral do evento
+      if (typeof loadedData.eventName !== 'string' || !Array.isArray(loadedData.blocks)) {
+        throw new Error("Estrutura do arquivo JSON inválida. Faltando 'eventName' ou 'blocks'.");
+      }
+
+      // 2. Valida cada bloco individualmente
+      const validStatuses = Object.keys(statusMap); // Pega status válidos do nosso mapa
+      const isValidBlocks = loadedData.blocks.every((block, index) => {
+        const blockIsValid =
+            typeof block.id === 'number' &&
+            typeof block.name === 'string' &&
+            typeof block.duration === 'number' && block.duration >= 0 && // Duração não pode ser negativa
+            (block.notes === undefined || typeof block.notes === 'string') && // Notas são opcionais ou string
+            // Campos de estado que serão resetados (não precisam validação estrita de tipo aqui, mas verificamos se existem se precisarmos deles)
+            // typeof block.elapsedTime === 'number' && block.elapsedTime >= 0 &&
+            // typeof block.status === 'string' && validStatuses.includes(block.status) &&
+            (block.completionDelay === undefined || block.completionDelay === null || typeof block.completionDelay === 'number'); // completionDelay opcional/null/numero
+
+         if (!blockIsValid) {
+             console.error(`Bloco inválido no índice ${index}:`, block);
+             // Poderia jogar erro mais específico aqui
+         }
+        return blockIsValid;
+      });
+
+      if (!isValidBlocks) {
+        throw new Error("Dados inválidos encontrados em um ou mais blocos dentro do arquivo JSON.");
+      }
+
+      // --- ATUALIZAÇÃO DO ESTADO (Com Reset) ---
+      // Se passou por todas as validações:
+      event.value = {
+        eventName: loadedData.eventName, // Mantém nome do evento carregado
+        blocks: loadedData.blocks.map(b => ({ // Mapeia os blocos carregados
+          // Mantém dados estruturais/descritivos:
+          id: b.id, // Usa o ID original para consistência? Ou gera novo? Manter é melhor para referências.
+          name: b.name ?? `Bloco ${Date.now()}`, // Nome original ou padrão se ausente
+          duration: b.duration ?? 60,        // Duração original ou padrão se ausente
+          notes: b.notes ?? '',               // Notas originais ou padrão se ausente
+          // *** RESETA O ESTADO DINÂMICO ***
+          elapsedTime: 0,                     // Sempre começa zerado
+          status: 'idle',                     // Sempre começa como 'Ocioso'
+          completionDelay: null             // Sempre começa sem delay/folga calculado
+        }))
+      };
+      currentBlockIndex.value = null; // Garante que nenhum bloco está ativo
+      alert('Evento carregado e resetado com sucesso! Pronto para iniciar.');
+      console.log("Evento carregado do arquivo:", event.value);
+
+    } catch (error) {
+      console.error("Erro ao carregar ou processar o arquivo JSON:", error);
+      // Mostra mensagem de erro mais específica para o usuário
+      alert(`Erro ao carregar o arquivo: ${error.message}\n\nVerifique se o arquivo é um JSON válido exportado pelo Mestari.`);
+    } finally {
+      // Limpa o valor do input para permitir carregar o mesmo arquivo novamente
+      if (e.target) e.target.value = null;
+    }
   };
-  reader.onerror = (err) => { console.error("Erro ao ler:", err); alert("Erro ao ler arquivo."); if(e.target) e.target.value = null; };
+
+  reader.onerror = (err) => {
+    console.error("Erro ao ler o arquivo:", err);
+    alert("Ocorreu um erro ao tentar ler o arquivo selecionado.");
+    if (e.target) e.target.value = null;
+  };
+
+  // Inicia a leitura
   reader.readAsText(file);
+
 }
 function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 
