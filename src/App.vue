@@ -572,7 +572,9 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 <template>
   <div class="app-container" :class="{ 'dark-theme': isDarkMode }">
     <header>
-      <h1>Mestari ⏱️</h1>
+<h1 class="app-title">
+      Mestari <img src="/favicon.png" alt="Logo Mestari" class="header-logo">
+    </h1>
       <div class="header-actions">
         <a href="http://link.mercadopago.com.br/rickfre" target="_blank" rel="noopener noreferrer"
            class="theme-toggle-button coffee-button"
@@ -1151,4 +1153,18 @@ p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-s
    animation-name: pulse-bg-dark;
 }
 
+.app-title {
+  display: flex; /* Coloca a imagem e o texto lado a lado */
+  align-items: center; /* Alinha verticalmente a imagem e o texto no centro */
+  gap: 8px; /* Adiciona um espaço entre a imagem e o texto (ajuste conforme necessário) */
+  /* Você pode adicionar outros estilos ao h1 aqui se precisar, como font-size, color, margin, etc. */
+  margin: 1; /* Exemplo: remove margens padrão do h1 se necessário */
+}
+
+.header-logo {
+  height: 1.2em; /* Define a altura da imagem relativa ao tamanho da fonte do h1. Ajuste! */
+  /* Alternativamente, use um valor fixo: height: 30px; */
+  transform: translateY(-2px);
+  width: auto; /* Mantém a proporção da imagem */
+}
 </style>
