@@ -1,6 +1,6 @@
 <script setup>
 // ----- BLOCO SCRIPT SETUP -----
-import { ref, onMounted, onUnmounted, watchEffect, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watchEffect, computed, watch, nextTick } from 'vue' 
 
 // --- ESTADO REATIVO ---
 const event = ref({ eventName: 'Meu Evento Padrão', blocks: [] });
@@ -161,10 +161,42 @@ const themeButtonText = computed(() => {
 });
 
 
-// --- PERSISTÊNCIA COM LOCALSTORAGE ---
-watchEffect(() => {
-  localStorage.setItem('mestariEventData', JSON.stringify(event.value));
-  localStorage.setItem('mestariTheme', JSON.stringify(isDarkMode.value));
+// --- PERSISTÊNCIA COM LOCALSTORAGE - CAUSANDO O ERRO DE SALVAR O ESTADO INICIAL PADRÃO VAZIO E SOBREESCREVENDO O LOCALSTORAGE - COMENTADO PARA NÃO CAUSAR MAIS ---
+/*watchEffect(() => {
+  try {
+      const currentEventState = JSON.parse(JSON.stringify(event.value)); // Clona para log
+      const eventString = JSON.stringify(event.value);
+      localStorage.setItem('mestariEventData', eventString);
+      localStorage.setItem('mestariTheme', JSON.stringify(isDarkMode.value));
+      // Log mais detalhado
+      console.log(`--- DEBUG: watchEffect SALVANDO... Nome: ${currentEventState.eventName}, Blocos: ${currentEventState.blocks?.length ?? 0} ---`);
+  } catch (error) {
+      console.error("--- DEBUG: watchEffect ERRO ao salvar ---:", error);
+  }
+});*/
+
+// NOVO: Observa mudanças profundas no objeto 'event' para salvar
+watch(event, (newEventValue) => {
+  // Este log só deve aparecer DEPOIS de uma mudança real no evento
+  console.log("--- DEBUG: watch 'event' disparado ---");
+  try {
+    const eventString = JSON.stringify(newEventValue);
+    localStorage.setItem('mestariEventData', eventString);
+    console.log(`--- DEBUG: watch SALVANDO Evento... Blocos: ${newEventValue.blocks?.length ?? 0}`);
+  } catch (error) {
+    console.error("--- DEBUG: watch 'event' ERRO ao salvar ---:", error);
+  }
+}, { deep: true }); // deep: true é ESSENCIAL para detectar mudanças dentro de 'blocks'
+
+// NOVO: Observa mudanças no 'isDarkMode' para salvar o tema
+watch(isDarkMode, (newThemeValue) => {
+  console.log("--- DEBUG: watch 'isDarkMode' disparado ---");
+  try {
+    localStorage.setItem('mestariTheme', JSON.stringify(newThemeValue));
+    console.log("--- DEBUG: watch SALVANDO Tema ---");
+  } catch (error) {
+    console.error("--- DEBUG: watch 'isDarkMode' ERRO ao salvar Tema ---:", error);
+  }
 });
 
 // --- GERENCIAMENTO DO TICKER E VISIBILIDADE ---
@@ -190,30 +222,63 @@ function handleVisibilityChange() {
 }
 
 onMounted(() => {
-  const savedEvent = localStorage.getItem('mestariEventData');
+  console.log('--- DEBUG: onMounted INICIOU ---');
+  let savedEvent = null;
+  try {
+    console.log('--- DEBUG: Antes getItem ---');
+    savedEvent = localStorage.getItem('mestariEventData');
+    console.log('--- DEBUG: Depois getItem. Valor:', savedEvent ? `String(${savedEvent.length})` : 'null');
+  } catch (storageError) {
+    console.error('--- DEBUG: ERRO getItem ---', storageError); savedEvent = null;
+  }
+
+  console.log('--- DEBUG: Verificando savedEvent ---');
   if (savedEvent) {
+    console.log("--- DEBUG: savedEvent OK, tentando parsear... ---");
     try {
       const loadedEvent = JSON.parse(savedEvent);
-      event.value = {
-        eventName: loadedEvent?.eventName || 'Evento Carregado',
-        blocks: Array.isArray(loadedEvent?.blocks) ? loadedEvent.blocks : []
-      };
-      event.value.blocks.forEach(block => {
-        if (block.completionDelay === undefined) block.completionDelay = null;
-        if (block.elapsedTime === undefined) block.elapsedTime = 0;
-        if (block.notes === undefined) block.notes = '';
-        if (block.duration === undefined) block.duration = 60;
-        if (block.status !== 'idle' && block.status !== 'completed') block.status = 'idle';
-      });
-    } catch (e) { console.error("Erro ao carregar evento:", e); localStorage.removeItem('mestariEventData'); event.value = { eventName: 'Novo Evento (Erro ao Carregar)', blocks: [] }; }
-  } else {
-    event.value.eventName = 'Meu Primeiro Evento';
-  }
-  const savedTheme = localStorage.getItem('mestariTheme');
-  if (savedTheme) { try { isDarkMode.value = JSON.parse(savedTheme); } catch(e) { console.error("Erro ao carregar tema", e); } }
+      console.log("--- DEBUG: Parse OK. Dados crus:", JSON.parse(JSON.stringify(loadedEvent))); // Log dados crus
+
+      const eventName = loadedEvent?.eventName || 'Evento Carregado';
+      const blocksData = Array.isArray(loadedEvent?.blocks) ? loadedEvent.blocks : [];
+
+      console.log(`--- DEBUG: PRESTES a atribuir eventName=<span class="math-inline">\{eventName\}, blocks\=</span>{blocksData.length}`);
+
+      // Atribui separadamente para testar
+      event.value.eventName = eventName;
+      event.value.blocks = blocksData.map(b => ({
+        id: b.id, name: b.name ?? '', duration: b.duration ?? 60, notes: b.notes ?? '',
+        // Resetando estado
+        elapsedTime: 0, status: 'idle', completionDelay: null
+      }));
+
+      // Log IMEDIATAMENTE APÓS atribuir
+      console.log("--- DEBUG: event.value IMEDIATAMENTE APÓS atribuir:", JSON.parse(JSON.stringify(event.value)));
+      console.log("--- DEBUG: event.value.blocks.length IMEDIATAMENTE APÓS atribuir:", event.value.blocks.length);
+
+    } catch (e) { /* ... catch do parse ... */ console.error("--- DEBUG: ERRO no parse ou normalização ---", e); localStorage.removeItem('mestariEventData'); event.value = { eventName: 'Novo Evento (Erro ao Carregar)', blocks: [] }; }
+  } else { /* ... else nenhum evento salvo ... */ console.log("--- DEBUG: Nenhum evento salvo ---"); event.value.eventName = 'Meu Primeiro Evento'; event.value.blocks = []; }
+
+  // Carregamento do tema
+  console.log('--- DEBUG: Carregando tema ---');
+  // ... (código tema) ...
+
   currentBlockIndex.value = null;
+  console.log('--- DEBUG: Antes de iniciar Ticker/Listeners ---');
   intervalId = setInterval(tick, 1000);
   document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  console.log('--- DEBUG: Antes do nextTick ---');
+  nextTick(() => {
+    console.log("--- DEBUG: Dentro do nextTick. event.value.blocks.length:", event.value.blocks.length); // Log crucial
+    if (event.value.blocks.length === 0) {
+      addBlockNameInputRef.value?.focus();
+      console.log("--- DEBUG: Foco ativado (lista vazia no nextTick) ---");
+    } else {
+      console.log("--- DEBUG: Sem foco automático (lista NÃO vazia no nextTick) ---");
+    }
+  });
+  console.log('--- DEBUG: Fim do onMounted ---');
 });
 
 onUnmounted(() => {
