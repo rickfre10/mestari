@@ -11,6 +11,7 @@ const isDarkMode = ref(false);
 const fileInputRef = ref(null);
 const plannedTimeJustChanged = ref(false);
 let plannedTimeChangeTimeout = null;
+const addBlockNameInputRef = ref(null); 
 
 // --- VARIÁVEIS NÃO REATIVAS ---
 let intervalId = null;
@@ -353,6 +354,8 @@ function goToNextBlock() {
   }
 }
 
+
+
 // --- Funções de Reordenação ---
 function moveBlockUp(index) {
   if (index > 0) {
@@ -511,8 +514,8 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
            title="Apoie o desenvolvedor!">
            Me paga um café? ☕️
         </a>
-        <button @click="toggleTheme" class="theme-toggle-button"> 
-          {{ themeButtonText }}
+         <button @click="toggleTheme" class="theme-toggle-button" :title="`Mudar para Modo ${isDarkMode ? 'Claro' : 'Noturno'}`"> 
+         {{ themeButtonText }}
         </button>
       </div>
     </header>
@@ -643,7 +646,8 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
             </div>
           </li>
         </ul>
-        <p v-else>Nenhum bloco adicionado a este evento ainda.</p>
+        <p>Nenhum bloco adicionado a este evento ainda.</p> 
+        <p><em>Use o formulário 'Adicionar Novo Bloco' para começar!</em></p>
       </section>
     </main>
   </div>
