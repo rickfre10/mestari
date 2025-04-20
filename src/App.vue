@@ -388,7 +388,7 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
            title="Apoie o desenvolvedor!">
            Me paga um café? ☕️
         </a>
-        <button @click="toggleTheme" class="theme-toggle-button">
+        <button @click="toggleTheme" class="theme-toggle-button"> 
           {{ themeButtonText }}
         </button>
       </div>
@@ -419,6 +419,9 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
             ref="eventNameInputRef"
             placeholder="Digite o nome do evento"
           >
+
+          <label for="eventNameInput">Nome do Evento:</label>
+
           <button @click="confirmEditEventName" class="inline-confirm-button" title="Confirmar">✅</button>
           <button @click="cancelEditEventName" class="inline-cancel-button" title="Cancelar">❌</button>
         </div>
