@@ -1,0 +1,97 @@
+{
+    "header": {
+      "title": "Mestari ⏱️",
+      "logoAlt": "Mestari Logo",
+      "coffeeButton": "Buy me a coffee? ☕️",
+      "coffeeButtonTooltip": "Support the developer!",
+      "themeToggleLight": "☀️ Light Mode",
+      "themeToggleDark": "🌙 Dark Mode",
+      "changeToPrefix": "Change to "
+    },
+    "eventActions": {
+      "newEvent": "✨ New event",
+      "uploadEvent": "⬆️ Upload event",
+      "saveEvent": "💾 Save event",
+      "resetEvent": "↻ Reset Event",
+      "tooltipNew": "Clear everything and start a new blank event",
+      "tooltipUpload": "Load data from a saved event (.json)",
+      "tooltipSave": "Save the current event as a .json file",
+      "tooltipReset": "Reset the state (time/status) of all blocks"
+    },
+    "eventNameSection": {
+      "label": "Event Name:",
+      "editTooltip": "Edit Event Name",
+      "confirmTooltip": "Confirm Change",
+      "cancelTooltip": "Cancel Change",
+      "placeholder": "Enter the event name"
+    },
+    "statusSection": {
+      "title": "General Event Status",
+      "planned": "Planned",
+      "elapsed": "Elapsed",
+      "delaySlack": "Accumulated Delay / Slack"
+    },
+    "currentBlockSection": {
+      "title": "Now:",
+      "fallbackName": "Current Block",
+      "progressPrefix": "Progress:",
+      "notesLabel": "Agenda and Notes:",
+      "nextBlockButton": "Next Block ▶▶",
+      "nextBlockTooltip": "Finish current block and advance to the next",
+      "noActiveTitle": "No active block",
+      "noActiveMsgIdle": "Use the \"Start\" button in the list below or click here to start the next idle block.",
+      "noActiveMsgDone": "All blocks have been completed.",
+      "noActiveMsgEmpty": "Add blocks to the event to begin.",
+      "startEventButton": "Start Event / Next Block ▶▶",
+      "startEventTooltip": "Start the first idle block"
+    },
+    "addBlockSection": {
+      "title": "Add New Block",
+      "nameLabel": "Block Name:",
+      "namePlaceholder": "Block name",
+      "durationLabel": "Duration (HH:MM:SS):",
+      "durationPlaceholder": "HH:MM:SS or Seconds",
+      "addButton": "Add Block",
+      "addTooltip": "Add this new block to the end of the list"
+    },
+    "blockListSection": {
+      "title": "Event Blocks:",
+      "emptyMessage": "No blocks added to this event yet.",
+      "useFormMessage": "Use the 'Add New Block' form to start!",
+      "notesPlaceholder": "Add agenda/notes...",
+      "blockInfo": {
+        "noName": "No name",
+        "elapsedPrefix": "Elapsed",
+        "statusPrefix": "Status",
+        "deviationPrefix": "Deviation"
+      },
+      "tooltips": {
+        "start": "Start Block",
+        "pause": "Pause Block",
+        "resume": "Resume Block",
+        "reset": "Reset Block (Return to Idle)",
+        "delete": "Delete Block",
+        "moveUp": "Move Block Up",
+        "moveDown": "Move Block Down"
+      }
+    },
+    "alerts": {
+        "invalidDuration": "Invalid duration format. Use HH:MM:SS, MM:SS, or seconds.",
+        "confirmNewEvent": "This will clear the current event (name and blocks). Do you want to continue?",
+        "confirmResetEvent": "Are you sure you want to reset ALL blocks?",
+        "errorSaving": "Error saving event.",
+        "invalidFile": "Invalid file. Please select a .json file exported by Mestari.",
+        "errorReadingFile": "An error occurred while trying to read the selected file.",
+        "errorLoadingFile": "Error loading file: {message}",
+        "eventLoaded": "Event loaded!",
+        "invalidJsonStructure": "Invalid JSON file structure. Missing 'eventName' or 'blocks'.",
+        "invalidBlockData": "Invalid data found in one or more blocks within the JSON file."
+    },
+    "status": {
+        "idle": "Idle",
+        "running": "Running",
+        "paused": "Paused",
+        "done": "Done",
+        "overrun": "Overrun"
+    }
+  }
