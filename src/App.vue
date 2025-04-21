@@ -681,48 +681,72 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
         <button @click="addBlock" class="add-block-button">Adicionar Bloco</button>
       </section>
 
-       <section class="block-list-section">
-        <h2>Blocos do Evento:</h2>
-
-        <ul v-if="event.blocks.length > 0">
-          <li v-for="(block, index) in event.blocks" :key="block.id" :class="{ active: index === currentBlockIndex }">
-            <div class="block-info">
-              <span>
-                {{ block.name || 'Sem nome' }} | {{ formatTime(block.duration) }} |
-                Dec: <span :class="{ 'overtime-indicator': block.elapsedTime > block.duration }">{{ formatTime(block.elapsedTime) }}</span> |
-                Status: {{ translateStatus(block.status) }}
-                <span v-if="block.completionDelay !== null" :class="{ delay: block.completionDelay > 5, slack: block.completionDelay < -5 }">
-                  (Desvio: {{ block.completionDelay >= 0 ? '+' : '' }}{{ formatTime(block.completionDelay) }})
-                </span>
-              </span>
-            </div>
-            <div class="block-actions-row">
-              <span class="control-buttons-group">
-                <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" title="Iniciar Bloco">▶</button>
-                <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" title="Pausar Bloco">❚❚</button>
-                <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" title="Retomar Bloco">►</button>
-                <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" title="Resetar Bloco (Voltar para Ocioso)">↻</button>
-                <button @click="deleteBlock(block.id)" class="control-button delete" title="Deletar Bloco">🗑️</button>
-              </span>
-              <span class="reorder-buttons-group">
-                <button @click="moveBlockUp(index)" :disabled="index === 0" title="Mover Bloco Para Cima">⬆️</button>
-                <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" title="Mover Bloco Para Baixo">⬇️</button>
-              </span>
-            </div>
-            <div class="notes-area">
-              <textarea :id="'notes-li-' + block.id" v-model="block.notes" placeholder="Adicionar pauta/anotações..." rows="3"></textarea>
-            </div>
-          </li>
-        </ul>
-
-        <div v-else class="empty-list-message">
-            <p>Nenhum bloco adicionado a este evento ainda.</p>
-            <p><em>Use o formulário 'Adicionar Novo Bloco' para começar!</em></p>
-        </div>
-
-      </section>
+      <section class="block-list-section">
+      <h2>Blocos do Evento:</h2>
+      <TransitionGroup v-if="event.blocks.length > 0" tag="ul" name="list" class="block-list-ul">
+        <li v-for="(block, index) in event.blocks" :key="block.id" :class="{ active: index === currentBlockIndex }">
+          <div class="block-info">
+             <span>
+               {{ block.name || 'Sem nome' }} | {{ formatTime(block.duration) }} |
+               Dec: <span :class="{ 'overtime-indicator': block.elapsedTime > block.duration }">{{ formatTime(block.elapsedTime) }}</span> |
+               Status: {{ translateStatus(block.status) }}
+               <span v-if="block.completionDelay !== null" :class="{ delay: block.completionDelay > 5, slack: block.completionDelay < -5 }">
+                 (Desvio: {{ block.completionDelay >= 0 ? '+' : '' }}{{ formatTime(block.completionDelay) }})
+               </span>
+             </span>
+           </div>
+           <div class="block-actions-row">
+             <span class="control-buttons-group">
+               <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" title="Iniciar Bloco">▶</button>
+               <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" title="Pausar Bloco">❚❚</button>
+               <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" title="Retomar Bloco">►</button>
+               <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" title="Resetar Bloco (Voltar para Ocioso)">↻</button>
+               <button @click="deleteBlock(block.id)" class="control-button delete" title="Deletar Bloco">🗑️</button>
+             </span>
+             <span class="reorder-buttons-group">
+               <button @click="moveBlockUp(index)" :disabled="index === 0" title="Mover Bloco Para Cima">⬆️</button>
+               <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" title="Mover Bloco Para Baixo">⬇️</button>
+             </span>
+           </div>
+           <div class="notes-area">
+             <textarea :id="'notes-li-' + block.id" v-model="block.notes" placeholder="Adicionar pauta/anotações..." rows="3"></textarea>
+           </div>
+        </li>
+      </TransitionGroup>
+      <div v-else class="empty-list-message">
+          <p>Nenhum bloco adicionado a este evento ainda.</p>
+          <p><em>Use o formulário 'Adicionar Novo Bloco' para começar!</em></p>
+      </div>
+    </section>
     </main>
+
+
+    <footer class="app-footer-revised">
+      <div class="footer-left">
+        <span class="footer-app-name">Mestari</span>
+        <img src="/favicon.png" alt="Logo Mestari" class="footer-logo-app"/>
+      </div>
+      <div class="footer-center">
+        <p class="footer-about-text">Gerenciador de tempo e cronômetro ideal para controlar eventos, palestras e apresentações ao vivo. Mantenha sua pauta sob controle.</p>
+        <p class="footer-about-text">Nota de privacidade: todos os inseridos no Mestari são armazenados apenas localmente no seu navegador.</p>
+        <p class="footer-copyright">
+          <span>&copy; {{ new Date().getFullYear() }} Rickfre</span> |
+          <a href="/LICENSE" target="_blank" rel="noopener noreferrer">Licença MIT</a>
+        </p>
+      </div>
+      <nav class="footer-right">
+        <span>feito no Brasil por:</span>
+        <a href="https://rickfre.com.br" target="_blank" rel="noopener noreferrer" title="Rickfre Site">
+           <img src="/logo rck.svg" alt="Logo Rickfre" class="footer-logo-personal"/>
+        </a>
+      </nav>
+    </footer>
+
+
   </div>
+
+ 
+
   </template>
 
 <style scoped>
@@ -885,7 +909,6 @@ h1 {
 a.coffee-button {
   background-color: var(--btn-coffee-bg) !important;
   border-color: transparent !important;
-  color: #fff !important;
 }
 a.coffee-button:hover {
   background-color: var(--btn-coffee-hover-bg) !important;
@@ -1172,4 +1195,126 @@ p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-s
   transform: translateY(-2px);
   width: auto; /* Mantém a proporção da imagem */
 }
+
+.dark-theme .header-actions a.coffee-button {
+   color: #333 !important; /* << Define um texto BEM ESCURO para contraste */
+   /* Alternativa: Usar uma variável se tiver: var(--texto-sobre-fundo-claro); */
+}
+
+
+/* Estilos para a lista UL renderizada pelo TransitionGroup */
+/* Substitui a regra 'ul { ... }' */
+.block-list-ul {
+  list-style: none;
+  padding: 0;
+  position: relative; /* Necessário para posicionar itens que saem */
+}
+
+/* Transições da Lista (prefixo 'list-' baseado no name="list") */
+
+/* Estado inicial ao ENTRAR e estado final ao SAIR */
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px); /* Começa/termina deslizando da direita */
+}
+
+/* Define a duração e easing para ENTRADA e SAÍDA */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease; /* Meio segundo de animação suave */
+}
+
+/* Importante para animações de MOVER: */
+/* Faz com que os itens saindo não ocupem espaço físico, */
+/* permitindo que os outros itens se movam suavemente para suas novas posições. */
+.list-leave-active {
+  position: absolute; /* Tira o item do fluxo normal */
+  width: 100%; /* Mantém a largura para evitar colapso */
+}
+
+/* Transição para itens que se MOVEM (reordenação) */
+.list-move {
+  transition: transform 0.5s ease; /* Anima apenas a mudança de posição (transform) */
+}
+
+/* ----- NOVO: Estilos do Footer Revisado ----- */
+.app-footer-revised {
+  display: flex;
+  justify-content: space-between; /* Espaça os 3 blocos */
+  align-items: center; /* Alinha verticalmente */
+  flex-wrap: wrap; /* Quebra linha em telas pequenas */
+  gap: 15px 30px; /* Espaçamento vertical e horizontal */
+  padding: 25px 30px; /* Padding interno */
+  margin-top: 50px; /* Espaço acima do footer */
+  border-top: 1px solid var(--item-border); /* Linha separadora */
+  font-size: 0.8em; /* Texto geral menor */
+  color: var(--text-muted-color); /* Cor padrão mais suave */
+}
+
+/* Blocos Esquerda, Centro, Direita */
+.footer-left,
+.footer-center,
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espaço entre itens dentro de cada bloco */
+}
+
+.footer-left {
+  flex-shrink: 0; /* Não encolhe */
+}
+.footer-logo-app {
+  max-height: 20px;
+  vertical-align: middle;
+}
+.footer-app-name {
+  font-weight: 500;
+  color: var(--text-color); /* Destaca nome do app */
+}
+
+.footer-center {
+  flex-grow: 1; /* Ocupa espaço central */
+  flex-direction: column; /* Empilha "Sobre" e "Copyright" */
+  text-align: center;
+  gap: 5px; /* Espaço entre as linhas */
+}
+.footer-about-text,
+.footer-copyright {
+  margin: 0;
+  line-height: 1.3;
+}
+.footer-copyright a { /* Link da licença */
+  color: var(--text-muted-color);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+.footer-copyright a:hover {
+  color: var(--primary-color);
+}
+
+.footer-right {
+  flex-shrink: 0;
+  justify-content: flex-end; /* Alinha à direita */
+}
+.footer-right span {
+   margin-right: 5px; /* Espaço texto -> logo */
+}
+.footer-logo-personal {
+  max-height: 40px; /* Ajuste a altura do seu logo */
+  vertical-align: middle;
+}
+
+/* Footer Responsivo (Empilha no Mobile) */
+@media (max-width: 768px) {
+  .app-footer-revised {
+    flex-direction: column; /* Empilha os 3 blocos */
+    gap: 20px; /* Aumenta gap vertical */
+  }
+  .footer-center { order: 1; } /* Sobre/Copyright primeiro */
+  .footer-right { order: 2; justify-content: center; } /* Feito por... segundo */
+  .footer-left { order: 3; }  /* Logo/Nome app por último */
+}
+/* ----- FIM: Estilos do Footer Revisado ----- */
+
 </style>
