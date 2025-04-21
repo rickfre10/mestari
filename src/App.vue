@@ -589,18 +589,32 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 
     <main>
       <section class="global-event-actions">
-        <button @click="startNewEvent" class="header-button new-event" title="Limpar e Iniciar Novo Evento">✨ Novo evento</button>
-        <button @click="triggerFileInput" class="header-button" title="Carregar Evento de Arquivo JSON">⬆️ Subir evento</button>
+        <button @click="startNewEvent" class="header-button new-event" title="Limpar e Iniciar Novo Evento"> 
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        Novo evento
+        </button>
+        <button @click="triggerFileInput" class="header-button" title="Carregar Evento de Arquivo JSON">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        Subir evento
+        </button>
         <input type="file" accept=".json,application/json" @change="loadEventFromFile" ref="fileInputRef" style="display: none;">
-        <button @click="saveEventToFile" class="header-button" title="Salvar Evento Atual em Arquivo JSON">💾 Salvar evento</button>
-        <button @click="resetEntireEvent" class="header-button reset-event" title="Resetar Todos os Blocos">↻ Resetar Evento</button>
+        <button @click="saveEventToFile" class="header-button" title="Salvar Evento Atual em Arquivo JSON"> 
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        Salvar evento
+        </button>
+        <button @click="resetEntireEvent" class="header-button reset-event" title="Resetar Todos os Blocos">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        Resetar Evento
+        </button>
       </section>
 
       <section class="event-name-section">
         <label for="eventNameInput">Nome do Evento:</label>
         <div v-if="!isEditingEventName" class="event-name-view">
           <span class="event-name-display">{{ event.eventName }}</span>
-          <button @click="startEditEventName" class="inline-edit-button" title="Editar Nome">✏️</button>
+          <button @click="startEditEventName" class="inline-edit-button" title="Editar Nome">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          </button>
       </div>
         <div v-else class="event-name-edit">
           <input
@@ -615,8 +629,12 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 
           <label for="eventNameInput">Nome do Evento:</label>
 
-          <button @click="confirmEditEventName" class="inline-confirm-button" title="Confirmar">✅</button>
-          <button @click="cancelEditEventName" class="inline-cancel-button" title="Cancelar">❌</button>
+          <button @click="confirmEditEventName" class="inline-confirm-button" title="Confirmar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true" ><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </button>
+          <button @click="cancelEditEventName" class="inline-cancel-button" title="Cancelar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
       </section>
 
@@ -655,7 +673,10 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
         </div>
         <label :for="'notes-' + currentBlock.id">Pauta e Anotações:</label>
         <textarea :id="'notes-' + currentBlock.id" v-model="currentBlock.notes"></textarea>
-        <button @click="goToNextBlock" class="next-block-button">Próximo Bloco ▶▶</button>
+        <button @click="goToNextBlock" class="next-block-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+        Próximo Bloco
+        </button>
       </section>
 
       <section class="current-block-section" v-else>
@@ -664,7 +685,8 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
         <p v-else-if="event.blocks.length > 0">Todos os blocos foram concluídos.</p>
         <p v-else>Adicione blocos ao evento para começar.</p>
         <button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button">
-          Iniciar Evento / Próximo Bloco ▶▶
+          Iniciar Evento / Próximo Bloco
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
       </section>
 
@@ -678,7 +700,9 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
           <label for="blockDuration">Duração (HH:MM:SS): </label>
           <input type="text" id="blockDuration" v-model="newBlockDurationString" placeholder="HH:MM:SS ou Segundos"/>
         </div>
-        <button @click="addBlock" class="add-block-button">Adicionar Bloco</button>
+        <button @click="addBlock" class="add-block-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+        Adicionar Bloco</button>
       </section>
 
       <section class="block-list-section">
@@ -697,15 +721,29 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
            </div>
            <div class="block-actions-row">
              <span class="control-buttons-group">
-               <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" title="Iniciar Bloco">▶</button>
-               <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" title="Pausar Bloco">❚❚</button>
-               <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" title="Retomar Bloco">►</button>
-               <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" title="Resetar Bloco (Voltar para Ocioso)">↻</button>
-               <button @click="deleteBlock(block.id)" class="control-button delete" title="Deletar Bloco">🗑️</button>
+               <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" title="Iniciar Bloco"> 
+                <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polygon points="5 3 19 12 5 21 5 3"> </polygon> </svg>
+               </button>
+               <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" title="Pausar Bloco">
+                <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <rect x="6" y="4" width="4" height="16"> </rect><rect x="14" y="4" width="4" height="16"> </rect> </svg>
+               </button>
+               <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" title="Retomar Bloco">
+                <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polygon points="5 3 19 12 5 21 5 3"> </polygon></svg>
+               </button>
+               <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" title="Resetar Bloco (Voltar para Ocioso)">
+                <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill=none stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polyline points="23 4 23 10 17 10"> </polyline><polyline points="1 20 1 14 7 14"> </polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+              </button>
+               <button @click="deleteBlock(block.id)" class="control-button delete" title="Deletar Bloco">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polyline points="3 6 5 6 21 6"> </polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+               </button>
              </span>
              <span class="reorder-buttons-group">
-               <button @click="moveBlockUp(index)" :disabled="index === 0" title="Mover Bloco Para Cima">⬆️</button>
-               <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" title="Mover Bloco Para Baixo">⬇️</button>
+               <button @click="moveBlockUp(index)" :disabled="index === 0" title="Mover Bloco Para Cima">
+               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
+               </button>
+               <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" title="Mover Bloco Para Baixo">
+               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"><polyline points="6 9 12 15 18 9"></polyline></svg>
+               </button>
              </span>
            </div>
            <div class="notes-area">
@@ -723,7 +761,7 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 
     <footer class="app-footer-revised">
       <div class="footer-left">
-        <span class="footer-app-name">Mestari</span>
+        <h1 class="footer-app-name">Mestari</h1>
         <img src="/favicon.png" alt="Logo Mestari" class="footer-logo-app"/>
       </div>
       <div class="footer-center">
@@ -736,7 +774,7 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
       </div>
       <nav class="footer-right">
         <span>feito no Brasil por:</span>
-        <a href="https://rickfre.com.br" target="_blank" rel="noopener noreferrer" title="Rickfre Site">
+        <a href="https://rickfre.com.br" target="_blank" rel="noopener noreferrer" title="Acesse meu site">
            <img src="/logo rck.svg" alt="Logo Rickfre" class="footer-logo-personal"/>
         </a>
       </nav>
@@ -814,7 +852,7 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
   --primary-color: #8a5fff; 
   --primary-hover-color: #a082ff; 
   --bg-color: #1a1d24; --text-color: #e0e0e0; 
-  --text-muted-color: #a0a0a0; --header-bg: #2f1072; 
+  --text-muted-color: #cfcae3; --header-bg: #2f1072; 
   --header-text: #e0e0e0; --button-text: #ffffff; 
   --item-bg: #2c3e50; --item-border: #4b5a6a; 
   --item-active-bg: #3a2c50; --item-active-border: var(--primary-color); 
@@ -1098,7 +1136,7 @@ button.next-block-button:hover { background-color: var(--primary-hover-color); }
 .current-block-section h3 { border-bottom-color: var(--item-border); }
 .current-block-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
 .current-block-header h4 { margin: 0; font-size: 1.4em; font-weight: 700; color: var(--primary-color); }
-.dark-theme .current-block-header h4 { color: var(--primary-color); }
+.dark-theme .current-block-header h4 { color: var(--text-color); }
 .current-block-timer { font-size: 1.6em; font-weight: 700; color: var(--text-color); white-space: nowrap; }
 .current-block-timer.overtime-indicator { color: var(--overtime-color); }
 .progress-bar-container { width: 100%; height: 10px; background-color: var(--progress-track-color); border-radius: 5px; overflow: hidden; margin-top: 8px; margin-bottom: 15px; }
@@ -1319,6 +1357,30 @@ p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-s
   .footer-right { order: 2; justify-content: center; } /* Feito por... segundo */
   .footer-left { order: 3; }  /* Logo/Nome app por último */
 }
-/* ----- FIM: Estilos do Footer Revisado ----- */
+
+
+.button-icon {
+  width: 1em; /* Tamanho relativo à fonte do botão */
+  height: 1em; /* Mantém proporção quadrada */
+  /* Ajuste fino de alinhamento vertical com o texto (se houver) */
+  /* Common values: middle, text-bottom, -0.15em, etc. Experiment! */
+  vertical-align: -0.15em;
+  display: inline-block; /* Para alinhar corretamente */
+
+  /* Para ícones baseados em linhas (stroke) como Feather Icons: */
+  fill: noner; /* Geralmente não preenchemos */
+  stroke: currentColor; /* <<< MÁGICA: Herda a cor do texto do botão! */
+  stroke-width: 2; /* Ajuste conforme o set de ícones (Feather usa 2) */
+
+}
+
+/* Pode ser necessário ajustar padding dos botões se o SVG mudar o tamanho percebido */
+.control-button, .inline-edit-button, .reorder-buttons-group button /* etc */ {
+    /* Verifique se o padding ainda parece bom com o SVG */
+    /* padding: 5px 8px; */
+    /* line-height pode ajudar a centralizar o SVG verticalmente */
+    /* line-height: 1; */
+}
+
 
 </style>
