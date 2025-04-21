@@ -769,7 +769,7 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
         <p class="footer-about-text">Nota de privacidade: todos os inseridos no Mestari são armazenados apenas localmente no seu navegador.</p>
         <p class="footer-copyright">
           <span>&copy; {{ new Date().getFullYear() }} Rickfre</span> |
-          <a href="/LICENSE" target="public/LICENSE" rel="noopener noreferrer">Licença MIT</a>
+          <a href="/LICENSE.txt" target="blank" rel="noopener noreferrer">Licença MIT</a>
         </p>
       </div>
       <nav class="footer-right">
