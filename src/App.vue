@@ -1,6 +1,7 @@
 <script setup>
 // ----- BLOCO SCRIPT SETUP -----
 import { ref, onMounted, onUnmounted, watchEffect, computed, watch, nextTick } from 'vue' 
+import { useI18n } from 'vue-i18n'
 
 // --- ESTADO REATIVO ---
 const event = ref({ eventName: 'Meu Evento Padrão', blocks: [] });
@@ -12,6 +13,9 @@ const fileInputRef = ref(null);
 const plannedTimeJustChanged = ref(false);
 let plannedTimeChangeTimeout = null;
 const addBlockNameInputRef = ref(null); 
+
+// --- Obtém funcionalidades do i18n ---
+const { locale, setLocaleMessage } = useI18n()
 
 // --- VARIÁVEIS NÃO REATIVAS ---
 let intervalId = null;
@@ -115,6 +119,30 @@ const cumulativeEventDelay = computed(() => {
     seconds: roundedDelay
   };
 });
+
+// --- FUNÇÕES I18N ---  
+async function loadLocaleMessages(localeToLoad) {
+  if (!['pt', 'en'].includes(localeToLoad)) {
+    console.error(`[i18n] Tentativa de carregar locale inválido: ${localeToLoad}`);
+    return false;
+  }
+  console.log(`[i18n] Tentando carregar mensagens para: ${localeToLoad}`);
+  try {
+    const response = await fetch(`/locales/${localeToLoad}.json`);
+    if (!response.ok) {
+      throw new Error(`Falha ao buscar ${localeToLoad}.json: ${response.statusText}`);
+    }
+    const messages = await response.json();
+    setLocaleMessage(localeToLoad, messages); // Usa a função obtida do useI18n()
+    console.log(`[i18n] Mensagens para ${localeToLoad} carregadas com sucesso.`);
+    return true;
+  } catch (error) {
+    console.error(`[i18n] Erro ao carregar/processar mensagens para ${localeToLoad}:`, error);
+    return false;
+  }
+}
+// FIM FUNÇÕES I18N
+
 
 watch(totalPlannedDuration, (newValue, oldValue) => {
   // Evita acionar na carga inicial ou se o valor não mudou
@@ -221,64 +249,60 @@ function handleVisibilityChange() {
   }
 }
 
-onMounted(() => {
-  console.log('--- DEBUG: onMounted INICIOU ---');
-  let savedEvent = null;
-  try {
-    console.log('--- DEBUG: Antes getItem ---');
-    savedEvent = localStorage.getItem('mestariEventData');
-    console.log('--- DEBUG: Depois getItem. Valor:', savedEvent ? `String(${savedEvent.length})` : 'null');
-  } catch (storageError) {
-    console.error('--- DEBUG: ERRO getItem ---', storageError); savedEvent = null;
-  }
+// Substitua seu onMounted por este:
+onMounted(async () => { // <<< ADICIONADO 'async'
+  console.log('onMounted: Iniciando...'); // Log mais simples
 
-  console.log('--- DEBUG: Verificando savedEvent ---');
+  const initialLocale = locale.value; // Usa a ref 'locale' do useI18n
+  console.log(`onMounted: Carregando locale inicial '${initialLocale}'...`);
+  await loadLocaleMessages(initialLocale); // <<< 'await' agora é válido
+  console.log(`onMounted: Mensagens para '${initialLocale}' carregadas (ou falhou).`);
+
+  // Carregamento do evento (lógica original)
+  const savedEvent = localStorage.getItem('mestariEventData');
   if (savedEvent) {
-    console.log("--- DEBUG: savedEvent OK, tentando parsear... ---");
     try {
       const loadedEvent = JSON.parse(savedEvent);
-      console.log("--- DEBUG: Parse OK. Dados crus:", JSON.parse(JSON.stringify(loadedEvent))); // Log dados crus
+      event.value = {
+        eventName: loadedEvent?.eventName || 'Evento Carregado',
+        blocks: Array.isArray(loadedEvent?.blocks) ? loadedEvent.blocks : []
+      };
+      event.value.blocks.forEach(block => {
+        if (block.completionDelay === undefined) block.completionDelay = null;
+        if (block.elapsedTime === undefined) block.elapsedTime = 0;
+        if (block.notes === undefined) block.notes = '';
+        if (block.duration === undefined) block.duration = 60;
+        if (block.status !== 'idle' && block.status !== 'completed') block.status = 'idle';
+      });
+      console.log("onMounted: Evento carregado do localStorage.");
+    } catch (e) {
+      console.error("onMounted: Erro ao carregar/parsear evento:", e);
+      localStorage.removeItem('mestariEventData');
+      event.value = { eventName: 'Novo Evento (Erro ao Carregar)', blocks: [] };
+    }
+  } else {
+    console.log("onMounted: Nenhum evento salvo encontrado.");
+    event.value.eventName = 'Meu Primeiro Evento';
+    event.value.blocks = [];
+  }
 
-      const eventName = loadedEvent?.eventName || 'Evento Carregado';
-      const blocksData = Array.isArray(loadedEvent?.blocks) ? loadedEvent.blocks : [];
-
-      console.log(`--- DEBUG: PRESTES a atribuir eventName=<span class="math-inline">\{eventName\}, blocks\=</span>{blocksData.length}`);
-
-      // Atribui separadamente para testar
-      event.value.eventName = eventName;
-      event.value.blocks = blocksData.map(b => ({
-        id: b.id, name: b.name ?? '', duration: b.duration ?? 60, notes: b.notes ?? '',
-        // Resetando estado
-        elapsedTime: 0, status: 'idle', completionDelay: null
-      }));
-
-      // Log IMEDIATAMENTE APÓS atribuir
-      console.log("--- DEBUG: event.value IMEDIATAMENTE APÓS atribuir:", JSON.parse(JSON.stringify(event.value)));
-      console.log("--- DEBUG: event.value.blocks.length IMEDIATAMENTE APÓS atribuir:", event.value.blocks.length);
-
-    } catch (e) { /* ... catch do parse ... */ console.error("--- DEBUG: ERRO no parse ou normalização ---", e); localStorage.removeItem('mestariEventData'); event.value = { eventName: 'Novo Evento (Erro ao Carregar)', blocks: [] }; }
-  } else { /* ... else nenhum evento salvo ... */ console.log("--- DEBUG: Nenhum evento salvo ---"); event.value.eventName = 'Meu Primeiro Evento'; event.value.blocks = []; }
-
-  // Carregamento do tema
-  console.log('--- DEBUG: Carregando tema ---');
-  // ... (código tema) ...
+  // Carregamento do tema (lógica original)
+  const savedTheme = localStorage.getItem('mestariTheme');
+  if (savedTheme) { try { isDarkMode.value = JSON.parse(savedTheme); } catch(e) { console.error("Erro ao carregar tema", e); } }
 
   currentBlockIndex.value = null;
-  console.log('--- DEBUG: Antes de iniciar Ticker/Listeners ---');
-  intervalId = setInterval(tick, 1000);
-  document.addEventListener('visibilitychange', handleVisibilityChange);
 
-  console.log('--- DEBUG: Antes do nextTick ---');
+  // Inicia Ticker e Listener de Visibilidade (lógica original)
+  intervalId = setInterval(tick, 1000); // Garanta que tick() está definida!
+  document.addEventListener('visibilitychange', handleVisibilityChange); // Garanta que handleVisibilityChange está definida!
+
+  // Foco inicial (lógica original)
   nextTick(() => {
-    console.log("--- DEBUG: Dentro do nextTick. event.value.blocks.length:", event.value.blocks.length); // Log crucial
     if (event.value.blocks.length === 0) {
       addBlockNameInputRef.value?.focus();
-      console.log("--- DEBUG: Foco ativado (lista vazia no nextTick) ---");
-    } else {
-      console.log("--- DEBUG: Sem foco automático (lista NÃO vazia no nextTick) ---");
     }
   });
-  console.log('--- DEBUG: Fim do onMounted ---');
+  console.log('onMounted: Finalizado.');
 });
 
 onUnmounted(() => {
@@ -565,6 +589,23 @@ function loadEventFromFile(e) {
 
 }
 function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
+
+
+// ---  FUNÇÃO PARA TROCAR IDIOMA --- 
+async function changeLanguage(newLocale) {
+  if (locale.value !== newLocale && (newLocale === 'pt' || newLocale === 'en')) {
+    console.log(`[i18n] Tentando mudar idioma para: ${newLocale}`);
+    const loaded = await loadLocaleMessages(newLocale); // Chama a função de carregar
+    if (loaded) {
+      locale.value = newLocale; // Usa a ref 'locale' obtida do useI18n()
+      localStorage.setItem('mestariLocale', newLocale);
+      console.log(`[i18n] Idioma alterado para: ${newLocale}`);
+    } else {
+      console.warn(`[i18n] Não foi possível carregar ${newLocale}, idioma não alterado.`);
+    }
+  }
+}
+// FIM FUNÇÃO TROCAR IDIOMA
 
 // ----- FIM DO BLOCO SCRIPT SETUP -----
 </script>
