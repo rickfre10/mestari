@@ -599,9 +599,9 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
       <section class="event-name-section">
         <label for="eventNameInput">Nome do Evento:</label>
         <div v-if="!isEditingEventName" class="event-name-view">
-          <span>{{ event.eventName }}</span>
+          <span class="event-name-display">{{ event.eventName }}</span>
           <button @click="startEditEventName" class="inline-edit-button" title="Editar Nome">✏️</button>
-        </div>
+      </div>
         <div v-else class="event-name-edit">
           <input
             type="text"
@@ -752,7 +752,7 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 <style scoped>
 /* ----- BLOCO STYLE SCOPED ----- */
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 /* --- Variáveis e Base --- */
 .app-container {
@@ -975,14 +975,14 @@ h3 {
 
 /* Nome do Evento */
 .event-name-section {
-  margin-bottom: 25px; /* Ajustado */
+  margin-bottom: 25px; 
   background-color: var(--item-bg);
   border: 1px solid var(--item-border);
   border-radius: 6px;
   padding: 15px 20px;
   box-shadow: 0 1px 3px var(--shadow-color);
   display: flex;
-  align-items: center;
+  align-items: baseline;
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -993,24 +993,28 @@ h3 {
 }
 .event-name-view {
   display: flex;
-  align-items: center; /* Revertido para center */
+  align-items: center; 
   flex-grow: 1;
   gap: 8px;
 }
-/* Regra específica e correta para o SPAN */
+
 div.event-name-view span.event-name-display {
-  font-size: 1.3em;
-  font-weight: 600;
-  color: var(--text-color);
-  line-height: 1.4;
-  flex-grow: 1;
-  padding: 10px 0;
+  font-size: 1.2em;        /* 1.3x tamanho padrão */
+  font-weight: 600;     
+  color: var(--text-color);/* Cor do tema */
+  line-height: 1.4;        /* Ajuda no alinhamento vertical */
+  flex-grow: 1;            
+  padding: 0px 0;         
+  /* Garante que não herda bordas/margens */
   border: none;
   margin: 0;
   padding-bottom: 0;
+  /* Para nomes longos */
   overflow-wrap: break-word;
   word-break: break-all;
 }
+
+
 .event-name-edit {
   display: flex;
   align-items: center;
