@@ -761,7 +761,7 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 
     <footer class="app-footer-revised">
       <div class="footer-left">
-        <h1 class="footer-app-name">Mestari</span>
+        <h1 class="footer-app-name">Mestari</h1>
         <img src="/favicon.png" alt="Logo Mestari" class="footer-logo-app"/>
       </div>
       <div class="footer-center">
