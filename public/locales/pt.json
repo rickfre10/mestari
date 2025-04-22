@@ -1,97 +1,106 @@
 {
-    "header": {
-      "title": "Mestari ⏱️",
-      "logoAlt": "Logo Mestari",
-      "coffeeButton": "Me paga um café? ☕️",
-      "coffeeButtonTooltip": "Apoie o desenvolvedor!",
-      "themeToggleLight": "☀️ Modo Claro",
-      "themeToggleDark": "🌙 Modo Noturno",
-      "changeToPrefix": "Mudar para "
+  "header": {
+    "title": "Mestari",
+    "logoAlt": "Logo Mestari",
+    "coffeeButton": "Me paga um café? ☕️",
+    "coffeeButtonTooltip": "Apoie o desenvolvedor!",
+    "themeToggleLight": "☀️ Modo Claro",
+    "themeToggleDark": "🌙 Modo Noturno",
+    "changeToPrefix": "Mudar para "
+  },
+  "eventActions": {
+    "newEvent": "Novo evento",
+    "uploadEvent": "Subir evento",
+    "saveEvent": "Salvar evento",
+    "resetEvent": "Resetar Evento",
+    "tooltipNew": "Limpar tudo e iniciar um novo evento em branco",
+    "tooltipUpload": "Carregar dados de um evento salvo (.json)",
+    "tooltipSave": "Salvar o evento atual como um arquivo .json",
+    "tooltipReset": "Resetar o estado (tempo/status) de todos os blocos"
+  },
+  "eventNameSection": {
+    "label": "Nome do Evento:",
+    "editTooltip": "Editar Nome do Evento",
+    "confirmTooltip": "Confirmar Alteração",
+    "cancelTooltip": "Cancelar Alteração",
+    "placeholder": "Digite o nome do evento"
+  },
+  "statusSection": {
+    "title": "Status Geral do Evento",
+    "planned": "Planejado",
+    "elapsed": "Decorrido",
+    "delaySlack": "Atraso / Folga Acumulado"
+  },
+  "currentBlockSection": {
+    "title": "Agora:",
+    "fallbackName": "Bloco Atual",
+    "progressPrefix": "Progresso:",
+    "notesLabel": "Pauta e Anotações:",
+    "nextBlockButton": "Próximo Bloco", 
+    "nextBlockTooltip": "Concluir bloco atual e avançar para o próximo",
+    "noActiveTitle": "Nenhum bloco ativo",
+    "noActiveMsgIdle": "Use o botão \"Iniciar\" na lista abaixo ou clique aqui para iniciar o próximo bloco ocioso.",
+    "noActiveMsgDone": "Todos os blocos foram concluídos.",
+    "noActiveMsgEmpty": "Adicione blocos ao evento para começar.",
+    "startEventButton": "Iniciar Evento / Próximo Bloco", 
+    "startEventTooltip": "Iniciar o primeiro bloco ocioso"
+  },
+  "addBlockSection": {
+    "title": "Adicionar Novo Bloco",
+    "nameLabel": "Nome do Bloco:",
+    "namePlaceholder": "Nome do bloco",
+    "durationLabel": "Duração (HH:MM:SS):",
+    "durationPlaceholder": "HH:MM:SS ou Segundos",
+    "addButton": "Adicionar Bloco",
+    "addTooltip": "Adicionar este novo bloco ao final da lista"
+  },
+  "blockListSection": {
+    "title": "Blocos do Evento:",
+    "emptyMessage": "Nenhum bloco adicionado a este evento ainda.",
+    "useFormMessage": "Use o formulário 'Adicionar Novo Bloco' para começar!",
+    "notesPlaceholder": "Adicionar pauta/anotações...",
+    "blockInfo": {
+      "noName": "Sem nome",
+      "elapsedPrefix": "Dec",
+      "statusPrefix": "Status",
+      "deviationPrefix": "Desvio"
     },
-    "eventActions": {
-      "newEvent": "✨ Novo evento",
-      "uploadEvent": "⬆️ Subir evento",
-      "saveEvent": "💾 Salvar evento",
-      "resetEvent": "↻ Resetar Evento",
-      "tooltipNew": "Limpar tudo e iniciar um novo evento em branco",
-      "tooltipUpload": "Carregar dados de um evento salvo (.json)",
-      "tooltipSave": "Salvar o evento atual como um arquivo .json",
-      "tooltipReset": "Resetar o estado (tempo/status) de todos os blocos"
-    },
-    "eventNameSection": {
-      "label": "Nome do Evento:",
-      "editTooltip": "Editar Nome do Evento",
-      "confirmTooltip": "Confirmar Alteração",
-      "cancelTooltip": "Cancelar Alteração",
-      "placeholder": "Digite o nome do evento"
-    },
-    "statusSection": {
-      "title": "Status Geral do Evento",
-      "planned": "Planejado",
-      "elapsed": "Decorrido",
-      "delaySlack": "Atraso / Folga Acumulado"
-    },
-    "currentBlockSection": {
-      "title": "Agora:",
-      "fallbackName": "Bloco Atual",
-      "progressPrefix": "Progresso:",
-      "notesLabel": "Pauta e Anotações:",
-      "nextBlockButton": "Próximo Bloco ▶▶",
-      "nextBlockTooltip": "Concluir bloco atual e avançar para o próximo",
-      "noActiveTitle": "Nenhum bloco ativo",
-      "noActiveMsgIdle": "Use o botão \"Iniciar\" na lista abaixo ou clique aqui para iniciar o próximo bloco ocioso.",
-      "noActiveMsgDone": "Todos os blocos foram concluídos.",
-      "noActiveMsgEmpty": "Adicione blocos ao evento para começar.",
-      "startEventButton": "Iniciar Evento / Próximo Bloco ▶▶",
-      "startEventTooltip": "Iniciar o primeiro bloco ocioso"
-    },
-    "addBlockSection": {
-      "title": "Adicionar Novo Bloco",
-      "nameLabel": "Nome do Bloco:",
-      "namePlaceholder": "Nome do bloco",
-      "durationLabel": "Duração (HH:MM:SS):",
-      "durationPlaceholder": "HH:MM:SS ou Segundos",
-      "addButton": "Adicionar Bloco",
-      "addTooltip": "Adicionar este novo bloco ao final da lista"
-    },
-    "blockListSection": {
-      "title": "Blocos do Evento:",
-      "emptyMessage": "Nenhum bloco adicionado a este evento ainda.",
-      "useFormMessage": "Use o formulário 'Adicionar Novo Bloco' para começar!",
-      "notesPlaceholder": "Adicionar pauta/anotações...",
-      "blockInfo": {
-        "noName": "Sem nome",
-        "elapsedPrefix": "Dec",
-        "statusPrefix": "Status",
-        "deviationPrefix": "Desvio"
-      },
-      "tooltips": {
-        "start": "Iniciar Bloco",
-        "pause": "Pausar Bloco",
-        "resume": "Retomar Bloco",
-        "reset": "Resetar Bloco (Voltar para Ocioso)",
-        "delete": "Deletar Bloco",
-        "moveUp": "Mover Bloco Para Cima",
-        "moveDown": "Mover Bloco Para Baixo"
-      }
-    },
-    "alerts": {
-        "invalidDuration": "Formato de duração inválido. Use HH:MM:SS, MM:SS ou segundos.",
-        "confirmNewEvent": "Isso limpará o evento atual (nome e blocos). Deseja continuar?",
-        "confirmResetEvent": "Tem certeza que deseja resetar TODOS os blocos?",
-        "errorSaving": "Erro ao salvar evento.",
-        "invalidFile": "Arquivo inválido. Por favor, selecione um arquivo .json exportado pelo Mestari.",
-        "errorReadingFile": "Ocorreu um erro ao tentar ler o arquivo selecionado.",
-        "errorLoadingFile": "Erro ao carregar o arquivo: {message}",
-        "eventLoaded": "Evento carregado!",
-        "invalidJsonStructure": "Estrutura do arquivo JSON inválida. Faltando 'eventName' ou 'blocks'.",
-        "invalidBlockData": "Dados inválidos encontrados em um ou mais blocos dentro do arquivo JSON."
-    },
-    "status": {
-        "idle": "Ocioso",
-        "running": "Em execução",
-        "paused": "Pausado",
-        "done": "Concluído",
-        "overrun": "Estourado"
+    "tooltips": {
+      "start": "Iniciar Bloco",
+      "pause": "Pausar Bloco",
+      "resume": "Retomar Bloco",
+      "reset": "Resetar Bloco (Voltar para Ocioso)",
+      "delete": "Deletar Bloco",
+      "moveUp": "Mover Bloco Para Cima",
+      "moveDown": "Mover Bloco Para Baixo"
     }
+  },
+  "alerts": {
+    "invalidDuration": "Formato de duração inválido. Use HH:MM:SS, MM:SS ou segundos.",
+    "confirmNewEvent": "Isso limpará o evento atual (nome e blocos). Deseja continuar?",
+    "confirmResetEvent": "Tem certeza que deseja resetar TODOS os blocos?",
+    "errorSaving": "Erro ao salvar evento.",
+    "invalidFile": "Arquivo inválido. Por favor, selecione um arquivo .json exportado pelo Mestari.",
+    "errorReadingFile": "Ocorreu um erro ao tentar ler o arquivo selecionado.",
+    "errorLoadingFile": "Erro ao carregar o arquivo: {message}",
+    "eventLoaded": "Evento carregado!",
+    "invalidJsonStructure": "Estrutura do arquivo JSON inválida. Faltando 'eventName' ou 'blocks'.",
+    "invalidBlockData": "Dados inválidos encontrados em um ou mais blocos dentro do arquivo JSON."
+  },
+  "status": {
+    "idle": "Ocioso",
+    "running": "Em execução",
+    "paused": "Pausado",
+    "done": "Concluído",
+    "overrun": "Estourado"
+  },
+  "footer": { 
+    "appName": "Mestari",
+    "aboutText1": "Gerenciador de tempo e cronômetro ideal para controlar eventos, palestras e apresentações ao vivo. Mantenha sua pauta sob controle.",
+    "privacyNote": "Nota de privacidade: todos dados inseridos no Mestari são armazenados localmente no seu navegador. Não coletamos seus dados.",
+    "licenseLink": "Licença MIT",
+    "madeByPrefix": "feito no Brasil por:",
+    "personalSiteLinkTooltip": "Acesse meu site",
+    "personalLogoAlt": "Logo Rickfre"
   }
+}
