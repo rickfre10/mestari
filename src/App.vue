@@ -591,8 +591,7 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
         {{ translations.header.title }} <img src="/favicon.png" :alt="translations.header.logoAlt" class="header-logo">
       </h1>
 
-      <div class="header-actions">
-        <div class="language-switcher">
+      <div class="language-switcher">
           <div class="idioma-switch-group">
             <button
               @click="changeLanguage('pt')"
@@ -609,7 +608,10 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
               EN
             </button>
           </div>
-        </div>
+      </div>
+
+      <div class="header-actions">
+        
         <a
           href="http://link.mercadopago.com.br/rickfre"
           target="_blank"
@@ -800,15 +802,19 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 
     <footer class="app-footer-revised">
       <div class="footer-left">
+         <h1 class="footer-app-name">{{ translations.footer.appName }}</h1>
          <img src="/favicon.png" :alt="translations.header.logoAlt" class="footer-logo-app"/>
-         <span class="footer-app-name">{{ translations.footer.appName }}</span>
+         
       </div>
       <div class="footer-center">
          <p class="footer-about-text">{{ translations.footer.aboutText1 }}</p>
         <p class="footer-copyright">
           <span>&copy; {{ new Date().getFullYear() }} Rickfre</span> |
            <a href="/LICENSE.txt" target="_blank" rel="noopener noreferrer">{{ translations.footer.licenseLink }}</a>
-            <br><span>{{ translations.footer.privacyNote }}</span> </p>
+           <br>
+            <br><span>{{ translations.footer.privacyNote }}</span> 
+            <br>
+            <br><span> Version 2.0200 </span> </p>
       </div>
       <nav class="footer-right">
          <span>{{ translations.footer.madeByPrefix }}</span>
@@ -995,7 +1001,7 @@ h1 {
 
 /* Estilo específico botão de tema (arredondado) */
 .theme-toggle-button {
-  border-radius: 20px;
+  border-radius: 5px;
 }
 /* Estilo específico link do café (cor + importante para sobrescrever background base) */
 a.coffee-button {
@@ -1402,7 +1408,7 @@ p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-s
 }
 
 /* Footer Responsivo (Empilha no Mobile) */
-@media (max-width: 768px) {
+@media (max-width: 1460px) {
   .app-footer-revised {
     flex-direction: column; /* Empilha os 3 blocos */
     gap: 20px; /* Aumenta gap vertical */
@@ -1494,4 +1500,177 @@ p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-s
 .dark-theme .idioma-switch-button:hover:not(.lang-active) { /* <<-- MUDOU AQUI */
    background-color: rgba(0, 0, 0, 0.1);
 }
+
+@media (max-width: 768px) {
+  /* Reduz padding do header para ganhar espaço horizontal */
+  header {
+    padding: 10px 15px;
+  }
+
+  /* Reduz o tamanho do título no header */
+  h1.app-title {
+    font-size: 1.4em; /* Um pouco menor */
+  }
+
+  /* Reduz o gap entre os botões de ação no header */
+  .header-actions {
+    gap: 5px; /* Menos espaço entre botões */
+  }
+
+  /* Reduz o tamanho/padding dos botões principais no header */
+  .header-actions .theme-toggle-button,
+  .header-actions .coffee-button {
+    padding: 5px 10px; /* Menor padding */
+    font-size: 0.8em; /* Fonte menor */
+  }
+
+  /* Reduz o tamanho/padding dos botões de idioma */
+  .language-switcher .idioma-switch-button {
+    padding: 5px 8px; /* Menor padding */
+    font-size: 0.8em; /* Fonte menor */
+  }
+
+  /* Faz os botões de ação global ocuparem menos espaço vertical */
+  .global-event-actions .header-button {
+      padding: 8px 12px; /* Um pouco menos de padding vertical */
+      font-size: 0.85em;
+  }
+
+  /* Ajusta o formulário de adicionar bloco */
+  .add-block-form-section div {
+    flex-direction: column; /* Coloca label em cima do input */
+    align-items: flex-start; /* Alinha items à esquerda */
+  }
+  .add-block-form-section label {
+    width: 100%; /* Label ocupa toda a largura */
+    text-align: left; /* Alinha texto da label à esquerda */
+    margin-bottom: 3px;
+    margin-right: 0;
+  }
+  .add-block-form-section input {
+     width: 100%; /* Input ocupa toda a largura */
+     margin-bottom: 10px; /* Espaço após o input */
+  }
+
+  /* Melhora alinhamento e quebra na lista de blocos */
+  .block-actions-row {
+     flex-wrap: wrap; /* Permite que botões quebrem linha se necessário */
+     justify-content: flex-start; /* Começa da esquerda */
+  }
+  .control-buttons-group {
+      margin-bottom: 5px; /* Espaço se quebrar linha */
+  }
+  .reorder-buttons-group {
+     margin-left: auto; /* Tenta jogar para a direita se couber */
+  }
+}
+
+/* --- Ajustes Específicos para Telas BEM Pequenas (Ex: até 480px) --- */
+@media (max-width: 480px) {
+
+  /* --- Correção para os botões do Nome do Evento --- */
+  .event-name-edit {
+    gap: 4px; /* Reduz o espaço entre input e botões */
+    flex-wrap: wrap; /* Permite que botões quebrem linha abaixo do input se necessário */
+  }
+
+  .event-name-edit input {
+    /* Permite que o input encolha BASTANTE */
+    min-width: 80px; /* <<< Reduz drasticamente ou remove (min-width: 0;) */
+    /* Se quebrar linha, faz input ocupar largura total */
+    width: 100%;
+    margin-bottom: 5px; /* Adiciona espaço se botões forem para baixo */
+  }
+
+  .event-name-edit .inline-confirm-button,
+  .event-name-edit .inline-cancel-button {
+     font-size: 1.4em; /* Opcional: Aumentar um pouco o ícone */
+     padding: 3px;
+  }
+
+  /* --- Outros ajustes para 480px --- */
+  /* Reduz ainda mais o padding do header se necessário aqui */
+  header {
+    padding: 8px 10px;
+  }
+
+  /* Reduz ainda mais o título se necessário aqui */
+  h1.app-title {
+    font-size: 1.2em;
+  }
+
+  /* Reduz tamanho dos botões globais para caber melhor */
+   .global-event-actions {
+     grid-template-columns: 1fr; /* Força uma coluna única */
+   }
+
+  /* Garante que a logo pessoal no footer não fique gigante */
+   .footer-logo-personal {
+      max-height: 30px;
+   }
+}
+
+/* --- Ordem dos Ícones no Header (Desktop) --- */
+@media (min-width: 769px){ 
+
+  /* Garante que o container das ações é flex */
+  .header-actions {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Define a ordem visual dos elementos dentro de .header-actions */
+  /* Itens com 'order' menor aparecem primeiro. O padrão é 0. */
+
+  .header-actions .language-switcher {
+    order: 3 !important; /* <<< Idioma vai para o final */
+  }
+
+  .header-actions .coffee-button {
+    order: 1; /* Ordem explícita (opcional, já seria 0) */
+  }
+
+  .header-actions .theme-toggle-button {
+    order: 2 !important; /* Ordem explícita (opcional, já seria 0) */
+  }
+
+  /* --- IMPORTANTE: Resetar estilos Grid do mobile --- */
+  /* Se aplicamos Grid no mobile, precisamos resetar no desktop */
+  header {
+      display: flex; /* Garante Flexbox */
+      /* Reseta propriedades Grid caso tenham sido usadas */
+      grid-template-columns: none;
+      grid-template-rows: none;
+      grid-template-areas: none;
+      /* Restaura propriedades flex originais do desktop */
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap; /* ou nowrap, dependendo do seu design */
+      padding: 15px 25px; /* Padding original desktop */
+      gap: 10px; /* Gap original desktop */
+  }
+  h1.app-title {
+      /* Restaura propriedades originais */
+      flex-grow: 1;
+      grid-area: unset; /* Remove do grid area */
+      font-size: 1.7em; /* Tamanho original desktop */
+  }
+ .header-actions {
+      /* Restaura propriedades originais */
+      grid-area: unset; /* Remove do grid area */
+      width: auto; /* Largura automática */
+      justify-content: flex-end; /* Alinhamento original */
+      padding-top: 0; /* Remove padding extra */
+      gap: 8px; /* Gap original desktop */
+  }
+  .header-actions .language-switcher {
+      /* Reseta propriedades que possam ter sido setadas no mobile */
+      grid-area: unset;
+      justify-self: unset;
+      /* Mantém a ordem desktop definida acima */
+  }
+  /* (Fim do Reset Grid) */
+
+}
+
 </style>
