@@ -1,7 +1,8 @@
 <script setup>
 // ----- BLOCO SCRIPT SETUP -----
-import { ref, onMounted, onUnmounted, watchEffect, computed, watch, nextTick } from 'vue' 
-import { useI18n } from 'vue-i18n'
+import { ref, onMounted, onUnmounted, watchEffect, computed, watch, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
+import i18nInstance, { loadLocaleMessages } from './i18n'; 
 
 // --- ESTADO REATIVO ---
 const event = ref({ eventName: 'Meu Evento Padrão', blocks: [] });
@@ -13,9 +14,10 @@ const fileInputRef = ref(null);
 const plannedTimeJustChanged = ref(false);
 let plannedTimeChangeTimeout = null;
 const addBlockNameInputRef = ref(null); 
+const messagesLoaded = ref(false);
 
 // --- Obtém funcionalidades do i18n ---
-const { locale, setLocaleMessage } = useI18n()
+const { t, locale } = useI18n()
 
 // --- VARIÁVEIS NÃO REATIVAS ---
 let intervalId = null;
@@ -119,29 +121,6 @@ const cumulativeEventDelay = computed(() => {
     seconds: roundedDelay
   };
 });
-
-// --- FUNÇÕES I18N ---  
-async function loadLocaleMessages(localeToLoad) {
-  if (!['pt', 'en'].includes(localeToLoad)) {
-    console.error(`[i18n] Tentativa de carregar locale inválido: ${localeToLoad}`);
-    return false;
-  }
-  console.log(`[i18n] Tentando carregar mensagens para: ${localeToLoad}`);
-  try {
-    const response = await fetch(`/locales/${localeToLoad}.json`);
-    if (!response.ok) {
-      throw new Error(`Falha ao buscar ${localeToLoad}.json: ${response.statusText}`);
-    }
-    const messages = await response.json();
-    setLocaleMessage(localeToLoad, messages); // Usa a função obtida do useI18n()
-    console.log(`[i18n] Mensagens para ${localeToLoad} carregadas com sucesso.`);
-    return true;
-  } catch (error) {
-    console.error(`[i18n] Erro ao carregar/processar mensagens para ${localeToLoad}:`, error);
-    return false;
-  }
-}
-// FIM FUNÇÕES I18N
 
 
 watch(totalPlannedDuration, (newValue, oldValue) => {
@@ -249,16 +228,19 @@ function handleVisibilityChange() {
   }
 }
 
-// Substitua seu onMounted por este:
-onMounted(async () => { // <<< ADICIONADO 'async'
-  console.log('onMounted: Iniciando...'); // Log mais simples
 
-  const initialLocale = locale.value; // Usa a ref 'locale' do useI18n
+onMounted(async () => {
+  console.log('Locale atual no mounted:', locale.value); // Correto: usa 'locale' do useI18n
+
+  // CORREÇÃO AQUI: Usa 'i18nInstance.global' em vez de 'this.$i18n'
+  console.log('PT Messages:', JSON.stringify(i18nInstance.global.getLocaleMessage('pt'), null, 2));
+
+  const initialLocale = locale.value; // Correto: usa 'locale' do useI18n
   console.log(`onMounted: Carregando locale inicial '${initialLocale}'...`);
-  await loadLocaleMessages(initialLocale); // <<< 'await' agora é válido
+  await loadLocaleMessages(initialLocale); // Correto: usa a função importada e 'locale'
   console.log(`onMounted: Mensagens para '${initialLocale}' carregadas (ou falhou).`);
 
-  // Carregamento do evento (lógica original)
+  // Carregamento do evento (lógica original mantida)
   const savedEvent = localStorage.getItem('mestariEventData');
   if (savedEvent) {
     try {
@@ -267,41 +249,55 @@ onMounted(async () => { // <<< ADICIONADO 'async'
         eventName: loadedEvent?.eventName || 'Evento Carregado',
         blocks: Array.isArray(loadedEvent?.blocks) ? loadedEvent.blocks : []
       };
+      // Normaliza os blocos carregados
       event.value.blocks.forEach(block => {
         if (block.completionDelay === undefined) block.completionDelay = null;
         if (block.elapsedTime === undefined) block.elapsedTime = 0;
         if (block.notes === undefined) block.notes = '';
-        if (block.duration === undefined) block.duration = 60;
-        if (block.status !== 'idle' && block.status !== 'completed') block.status = 'idle';
+         // Adicione padrões para outros campos se necessário
+        if (typeof block.duration !== 'number' || block.duration <= 0) block.duration = 60; // Exemplo de padrão
+        const validStatuses = ['idle', 'running', 'paused', 'done', 'overrun'];
+        if (!validStatuses.includes(block.status)) block.status = 'idle'; // Exemplo de padrão
       });
       console.log("onMounted: Evento carregado do localStorage.");
     } catch (e) {
       console.error("onMounted: Erro ao carregar/parsear evento:", e);
       localStorage.removeItem('mestariEventData');
+      // Define um estado padrão em caso de erro
       event.value = { eventName: 'Novo Evento (Erro ao Carregar)', blocks: [] };
     }
   } else {
     console.log("onMounted: Nenhum evento salvo encontrado.");
-    event.value.eventName = 'Meu Primeiro Evento';
-    event.value.blocks = [];
+    // Define um estado inicial se não houver nada salvo
+    event.value = { eventName: 'Meu Primeiro Evento', blocks: [] };
   }
 
-  // Carregamento do tema (lógica original)
+  // Carregamento do tema (lógica original mantida)
   const savedTheme = localStorage.getItem('mestariTheme');
-  if (savedTheme) { try { isDarkMode.value = JSON.parse(savedTheme); } catch(e) { console.error("Erro ao carregar tema", e); } }
+  if (savedTheme) {
+    try {
+      isDarkMode.value = JSON.parse(savedTheme);
+    } catch(e) {
+      console.error("Erro ao carregar tema", e);
+      isDarkMode.value = false; // Define um padrão em caso de erro
+    }
+  }
 
+  // Reset do índice do bloco atual (lógica original mantida)
   currentBlockIndex.value = null;
 
-  // Inicia Ticker e Listener de Visibilidade (lógica original)
-  intervalId = setInterval(tick, 1000); // Garanta que tick() está definida!
-  document.addEventListener('visibilitychange', handleVisibilityChange); // Garanta que handleVisibilityChange está definida!
+  // Inicia Ticker e Listener de Visibilidade (lógica original mantida)
+  // Certifique-se que 'tick' e 'handleVisibilityChange' estão definidas no seu <script setup>
+  intervalId = setInterval(tick, 1000);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 
-  // Foco inicial (lógica original)
+  // Foco inicial (lógica original mantida)
   nextTick(() => {
-    if (event.value.blocks.length === 0) {
-      addBlockNameInputRef.value?.focus();
+    if (event.value.blocks.length === 0 && addBlockNameInputRef.value) {
+        addBlockNameInputRef.value.focus();
     }
   });
+
   console.log('onMounted: Finalizado.');
 });
 
@@ -596,14 +592,21 @@ async function changeLanguage(newLocale) {
   if (locale.value !== newLocale && (newLocale === 'pt' || newLocale === 'en')) {
     console.log(`[i18n] Tentando mudar idioma para: ${newLocale}`);
     const loaded = await loadLocaleMessages(newLocale); // Chama a função de carregar
-    if (loaded) {
-      locale.value = newLocale; // Usa a ref 'locale' obtida do useI18n()
-      localStorage.setItem('mestariLocale', newLocale);
-      console.log(`[i18n] Idioma alterado para: ${newLocale}`);
+    if (loaded) { // Verifica se o carregamento teve sucesso
+    messagesLoaded.value = true; // << DEFINE A FLAG COMO TRUE AQUI
+    console.log("[App] Mensagens iniciais carregadas, pronto para renderizar.")
     } else {
+    console.error("[App] Falha crítica ao carregar mensagens iniciais. App pode não funcionar corretamente.");
       console.warn(`[i18n] Não foi possível carregar ${newLocale}, idioma não alterado.`);
     }
+    console.log(`onMounted: Mensagens para '${initialLocale}' carregadas (sucesso: ${loaded}).`);
   }
+
+  const changeLanguage = async (lang) => {
+  await loadLocaleMessages(lang);
+  console.log(`Idioma alterado para: ${lang}`);
+  // O locale.value será atualizado automaticamente pelo loadLocaleMessages
+};
 }
 // FIM FUNÇÃO TROCAR IDIOMA
 
@@ -614,67 +617,75 @@ async function changeLanguage(newLocale) {
   <div class="app-container" :class="{ 'dark-theme': isDarkMode }">
     <header>
       <h1 class="app-title">
-         {{ 'Mestari' }} <img src="/favicon.png" :alt="$t('header.logoAlt')" class="header-logo">
+        {{ t('header.title') }} <img src="/favicon.png" :alt="t('header.logoAlt')" class="header-logo">
       </h1>
-      <div class="header-actions">
-      
-        <div class="language-switcher">
-              <button
-                @click="changeLanguage('pt')"
-                :class="{ 'lang-active': locale === 'pt' }"
-                class="lang-button"
-                aria-label="Mudar para Português"
-                title="Mudar para Português">
-                PT
-              </button>
-              <button
-                @click="changeLanguage('en')"
-                :class="{ 'lang-active': locale === 'en' }"
-                class="lang-button"
-                aria-label="Switch to English"
-                title="Switch to English">
-                EN
-              </button>
-          </div>
 
-        <a href="http://link.mercadopago.com.br/rickfre" target="_blank" rel="noopener noreferrer"
-           class="theme-toggle-button coffee-button"
-           :title="$t('header.coffeeButtonTooltip')">
-           {{ $t('header.coffeeButton') }}
+      <div class="header-actions">
+
+        <div class="language-switcher">
+          <div class="idioma-switch-group">
+            <button
+              @click="changeLanguage('pt')"
+              :class="{ 'lang-active': locale === 'pt' }"
+              class="idioma-switch-button"
+            >
+              PT
+            </button>
+            <button
+              @click="changeLanguage('en')"
+              :class="{ 'lang-active': locale === 'en' }"
+              class="idioma-switch-button"
+            >
+              EN
+            </button>
+          </div>
+        </div> <a
+          href="http://link.mercadopago.com.br/rickfre"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="theme-toggle-button coffee-button"
+          :title="t('header.coffeeButtonTooltip')"
+        >
+          {{ t('header.coffeeButton') }}
         </a>
-         <button @click="toggleTheme" class="theme-toggle-button" :title="$t('header.changeToPrefix') + (isDarkMode ? $t('header.themeToggleLight') : $t('header.themeToggleDark'))">
-           {{ isDarkMode ? $t('header.themeToggleLight') : $t('header.themeToggleDark') }}
+
+        <button
+          @click="toggleTheme"
+          class="theme-toggle-button"
+          :title="t('header.changeToPrefix') + (isDarkMode ? t('header.themeToggleLight') : t('header.themeToggleDark'))"
+        >
+          {{ t(isDarkMode ? 'header.themeToggleLight' : 'header.themeToggleDark') }}
         </button>
-      </div>
-    </header>
+
+      </div> </header>
 
     <main>
       <section class="global-event-actions">
-        <button @click="startNewEvent" class="header-button new-event" :title="$t('eventActions.tooltipNew')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-          {{ $t('eventActions.newEvent') }}
+        <button @click="startNewEvent" class="header-button new-event" :title="t('eventActions.tooltipNew')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+          {{ t('eventActions.newEvent') }}
         </button>
-        <button @click="triggerFileInput" class="header-button" :title="$t('eventActions.tooltipUpload')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          {{ $t('eventActions.uploadEvent') }}
+        <button @click="triggerFileInput" class="header-button" :title="t('eventActions.tooltipUpload')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          {{ t('eventActions.uploadEvent') }}
         </button>
         <input type="file" accept=".json,application/json" @change="loadEventFromFile" ref="fileInputRef" style="display: none;">
-        <button @click="saveEventToFile" class="header-button" :title="$t('eventActions.tooltipSave')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-          {{ $t('eventActions.saveEvent') }}
+        <button @click="saveEventToFile" class="header-button" :title="t('eventActions.tooltipSave')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          {{ t('eventActions.saveEvent') }}
         </button>
-        <button @click="resetEntireEvent" class="header-button reset-event" :title="$t('eventActions.tooltipReset')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-          {{ $t('eventActions.resetEvent') }}
+        <button @click="resetEntireEvent" class="header-button reset-event" :title="t('eventActions.tooltipReset')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          {{ t('eventActions.resetEvent') }}
         </button>
       </section>
 
       <section class="event-name-section">
-        <label for="eventNameInput">{{ $t('eventNameSection.label') }}</label>
+        <label for="eventNameInput">{{ t('eventNameSection.label') }}</label>
         <div v-if="!isEditingEventName" class="event-name-view">
           <span class="event-name-display">{{ event.eventName }}</span>
-          <button @click="startEditEventName" class="inline-edit-button" :title="$t('eventNameSection.editTooltip')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          <button @click="startEditEventName" class="inline-edit-button" :title="t('eventNameSection.editTooltip')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
           </button>
         </div>
         <div v-else class="event-name-edit">
@@ -685,165 +696,180 @@ async function changeLanguage(newLocale) {
             @keyup.enter="confirmEditEventName"
             @keyup.esc="cancelEditEventName"
             ref="eventNameInputRef"
-            :placeholder="$t('eventNameSection.placeholder')"
+            :placeholder="t('eventNameSection.placeholder')"
           >
-          <label for="eventNameInput">{{ $t('eventNameSection.label') }}</label>
-          <button @click="confirmEditEventName" class="inline-confirm-button" :title="$t('eventNameSection.confirmTooltip')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true" ><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <button @click="confirmEditEventName" class="inline-confirm-button" :title="t('eventNameSection.confirmTooltip')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </button>
-          <button @click="cancelEditEventName" class="inline-cancel-button" :title="$t('eventNameSection.cancelTooltip')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          <button @click="cancelEditEventName" class="inline-cancel-button" :title="t('eventNameSection.cancelTooltip')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
       </section>
 
       <section class="event-status-section">
-        <h3>{{ $t('statusSection.title') }}</h3>
+        <h3>{{ t('statusSection.title') }}</h3>
         <div class="status-grid">
           <div class="status-item">
-            <span>{{ $t('statusSection.planned') }}</span>
+            <span>{{ t('statusSection.planned') }}</span>
             <strong :class="{ 'highlight-change': plannedTimeJustChanged }">
               {{ totalPlannedDuration }}
             </strong>
           </div>
           <div class="status-item">
-             <span>{{ $t('statusSection.elapsed') }}</span>
-             <strong>{{ formatTime(totalEventElapsedTime) }}</strong>
+            <span>{{ t('statusSection.elapsed') }}</span>
+            <strong>{{ formatTime(totalEventElapsedTime) }}</strong>
           </div>
           <div class="status-item">
-             <span>{{ $t('statusSection.delaySlack') }}</span>
-             <strong :class="{ delay: cumulativeEventDelay.seconds > 5, slack: cumulativeEventDelay.seconds < -5 }">
-               {{ cumulativeEventDelay.sign }}{{ cumulativeEventDelay.time }}
-             </strong>
+            <span>{{ t('statusSection.delaySlack') }}</span>
+            <strong :class="{ delay: cumulativeEventDelay.seconds > 5, slack: cumulativeEventDelay.seconds < -5 }">
+              {{ cumulativeEventDelay.sign }}{{ cumulativeEventDelay.time }}
+            </strong>
           </div>
         </div>
       </section>
 
       <section class="current-block-section" v-if="currentBlock" :class="{ 'overrun-bg': currentBlock.status === 'overrun' || currentBlock.elapsedTime > currentBlock.duration }">
-        <h3>{{ $t('currentBlockSection.title') }}</h3>
+        <h3>{{ t('currentBlockSection.title') }}</h3>
         <div class="current-block-header">
-          <h4>{{ currentBlock.name || $t('currentBlockSection.fallbackName') }}</h4>
+          <h4>{{ currentBlock.name || t('currentBlockSection.fallbackName') }}</h4>
           <span class="current-block-timer" :class="{ 'overtime-indicator': currentBlock.elapsedTime > currentBlock.duration }">
             {{ currentBlockDisplayTime }}
           </span>
         </div>
-        <div class="progress-bar-container" :title="`${$t('currentBlockSection.progressPrefix')} ${Math.min(currentBlock.elapsedTime, currentBlock.duration)} / ${currentBlock.duration}s`">
+        <div class="progress-bar-container" :title="`${t('currentBlockSection.progressPrefix')} ${Math.min(currentBlock.elapsedTime, currentBlock.duration)} / ${currentBlock.duration}s`">
           <div class="progress-bar" :style="{ width: currentBlockProgress + '%' }" :class="{ 'progress-overrun': currentBlock.elapsedTime > currentBlock.duration }"></div>
         </div>
-        <label :for="'notes-' + currentBlock.id">{{ $t('currentBlockSection.notesLabel') }}</label>
+        <label :for="'notes-' + currentBlock.id">{{ t('currentBlockSection.notesLabel') }}</label>
         <textarea :id="'notes-' + currentBlock.id" v-model="currentBlock.notes"></textarea>
-        <button @click="goToNextBlock" class="next-block-button" :title="$t('currentBlockSection.nextBlockTooltip')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
-          {{ $t('currentBlockSection.nextBlockButton') }}
+        <button @click="goToNextBlock" class="next-block-button" :title="t('currentBlockSection.nextBlockTooltip')">
+          {{ t('currentBlockSection.nextBlockButton') }}
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
       </section>
 
       <section class="current-block-section" v-else>
-        <h3>{{ $t('currentBlockSection.noActiveTitle') }}</h3>
-        <p v-if="event.blocks.length > 0 && event.blocks.some(b => b.status === 'idle')">{{ $t('currentBlockSection.noActiveMsgIdle') }}</p>
-        <p v-else-if="event.blocks.length > 0">{{ $t('currentBlockSection.noActiveMsgDone') }}</p>
-        <p v-else>{{ $t('currentBlockSection.noActiveMsgEmpty') }}</p>
-        <button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button" :title="$t('currentBlockSection.startEventTooltip')">
-          {{ $t('currentBlockSection.startEventButton') }}
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+        <h3>{{ t('currentBlockSection.noActiveTitle') }}</h3>
+        <p v-if="event.blocks.length > 0 && event.blocks.some(b => b.status === 'idle')">{{ t('currentBlockSection.noActiveMsgIdle') }}</p>
+        <p v-else-if="event.blocks.length > 0">{{ t('currentBlockSection.noActiveMsgDone') }}</p>
+        <p v-else>{{ t('currentBlockSection.noActiveMsgEmpty') }}</p>
+        <button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button" :title="t('currentBlockSection.startEventTooltip')">
+          {{ t('currentBlockSection.startEventButton') }}
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
       </section>
 
       <section class="add-block-form-section">
-        <h3>{{ $t('addBlockSection.title') }}</h3>
+        <h3>{{ t('addBlockSection.title') }}</h3>
         <div>
-          <label for="blockName">{{ $t('addBlockSection.nameLabel') }} </label>
-          <input type="text" id="blockName" v-model="newBlockName" :placeholder="$t('addBlockSection.namePlaceholder')"/>
+          <label for="blockName">{{ t('addBlockSection.nameLabel') }} </label>
+          <input type="text" id="blockName" ref="addBlockNameInputRef" v-model="newBlockName" :placeholder="t('addBlockSection.namePlaceholder')"/>
         </div>
         <div>
-          <label for="blockDuration">{{ $t('addBlockSection.durationLabel') }} </label>
-          <input type="text" id="blockDuration" v-model="newBlockDurationString" :placeholder="$t('addBlockSection.durationPlaceholder')"/>
+          <label for="blockDuration">{{ t('addBlockSection.durationLabel') }} </label>
+          <input type="text" id="blockDuration" v-model="newBlockDurationString" :placeholder="t('addBlockSection.durationPlaceholder')"/>
         </div>
-        <button @click="addBlock" class="add-block-button" :title="$t('addBlockSection.addTooltip')">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-          {{ $t('addBlockSection.addButton') }}
+        <button @click="addBlock" class="add-block-button" :title="t('addBlockSection.addTooltip')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+          {{ t('addBlockSection.addButton') }}
         </button>
       </section>
 
       <section class="block-list-section">
-        <h2>{{ $t('blockListSection.title') }}</h2>
+        <h2>{{ t('blockListSection.title') }}</h2>
         <TransitionGroup v-if="event.blocks.length > 0" tag="ul" name="list" class="block-list-ul">
           <li v-for="(block, index) in event.blocks" :key="block.id" :class="{ active: index === currentBlockIndex }">
             <div class="block-info">
               <span>
-                 {{ block.name || $t('blockListSection.blockInfo.noName') }} | {{ formatTime(block.duration) }} |
-                 {{ $t('blockListSection.blockInfo.elapsedPrefix') }}: <span :class="{ 'overtime-indicator': block.elapsedTime > block.duration }">{{ formatTime(block.elapsedTime) }}</span> |
-                 {{ $t('blockListSection.blockInfo.statusPrefix') }}: {{ $t('status.' + block.status, block.status) }} <span v-if="block.completionDelay !== null" :class="{ delay: block.completionDelay > 5, slack: block.completionDelay < -5 }">
-                    ({{ $t('blockListSection.blockInfo.deviationPrefix') }}: {{ block.completionDelay >= 0 ? '+' : '' }}{{ formatTime(block.completionDelay) }})
-                 </span>
+                {{ block.name || t('blockListSection.blockInfo.noName') }} | {{ formatTime(block.duration) }} |
+                {{ t('blockListSection.blockInfo.elapsedPrefix') }}: <span :class="{ 'overtime-indicator': block.elapsedTime > block.duration }">{{ formatTime(block.elapsedTime) }}</span> |
+                {{ t('blockListSection.blockInfo.statusPrefix') }}: {{ t('status.' + block.status, block.status) }} <span v-if="block.completionDelay !== null" :class="{ delay: block.completionDelay > 5, slack: block.completionDelay < -5 }">
+                  ({{ t('blockListSection.blockInfo.deviationPrefix') }}: {{ block.completionDelay >= 0 ? '+' : '' }}{{ formatTime(block.completionDelay) }})
+                </span>
               </span>
             </div>
             <div class="block-actions-row">
               <span class="control-buttons-group">
-                 <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" :title="$t('blockListSection.tooltips.start')">
-                   <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polygon points="5 3 19 12 5 21 5 3"> </polygon> </svg>
-                 </button>
-                 <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" :title="$t('blockListSection.tooltips.pause')">
-                   <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <rect x="6" y="4" width="4" height="16"> </rect><rect x="14" y="4" width="4" height="16"> </rect> </svg>
-                 </button>
-                 <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" :title="$t('blockListSection.tooltips.resume')">
-                   <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polygon points="5 3 19 12 5 21 5 3"> </polygon></svg>
-                 </button>
-                 <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" :title="$t('blockListSection.tooltips.reset')">
-                   <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill=none stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polyline points="23 4 23 10 17 10"> </polyline><polyline points="1 20 1 14 7 14"> </polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                 </button>
-                 <button @click="deleteBlock(block.id)" class="control-button delete" :title="$t('blockListSection.tooltips.delete')">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polyline points="3 6 5 6 21 6"> </polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                 </button>
+                  <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" :title="t('blockListSection.tooltips.start')">
+                    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polygon points="5 3 19 12 5 21 5 3"> </polygon> </svg>
+                  </button>
+                  <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" :title="t('blockListSection.tooltips.pause')">
+                    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <rect x="6" y="4" width="4" height="16"> </rect><rect x="14" y="4" width="4" height="16"> </rect> </svg>
+                  </button>
+                  <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" :title="t('blockListSection.tooltips.resume')">
+                     <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polygon points="5 3 19 12 5 21 5 3"> </polygon> </svg>
+                  </button>
+                  <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" :title="t('blockListSection.tooltips.reset')">
+                    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polyline points="23 4 23 10 17 10"> </polyline><polyline points="1 20 1 14 7 14"> </polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                  </button>
+                  <button @click="deleteBlock(block.id)" class="control-button delete" :title="t('blockListSection.tooltips.delete')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
               </span>
               <span class="reorder-buttons-group">
-                 <button @click="moveBlockUp(index)" :disabled="index === 0" :title="$t('blockListSection.tooltips.moveUp')">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                 </button>
-                 <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" :title="$t('blockListSection.tooltips.moveDown')">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                 </button>
+                  <button @click="moveBlockUp(index)" :disabled="index === 0" :title="t('blockListSection.tooltips.moveUp')">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                  </button>
+                  <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" :title="t('blockListSection.tooltips.moveDown')">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </button>
               </span>
             </div>
             <div class="notes-area">
-               <textarea :id="'notes-li-' + block.id" v-model="block.notes" :placeholder="$t('blockListSection.notesPlaceholder')" rows="3"></textarea>
+              <textarea :id="'notes-li-' + block.id" v-model="block.notes" :placeholder="t('blockListSection.notesPlaceholder')" rows="3"></textarea>
             </div>
           </li>
         </TransitionGroup>
         <div v-else class="empty-list-message">
-           <p>{{ $t('blockListSection.emptyMessage') }}</p>
-           <p><em>{{ $t('blockListSection.useFormMessage') }}</em></p>
+          <p>{{ t('blockListSection.emptyMessage') }}</p>
+          <p><em>{{ t('blockListSection.useFormMessage') }}</em></p>
         </div>
       </section>
     </main>
 
-
     <footer class="app-footer-revised">
       <div class="footer-left">
-         <h1 class="footer-app-name">{{ $t('footer.appName') }}</h1>
-         <img src="/favicon.png" :alt="$t('header.logoAlt')" class="footer-logo-app"/> </div>
+        <img src="/favicon.png" :alt="t('header.logoAlt')" class="footer-logo-app"/>
+        <span class="footer-app-name">{{ t('footer.appName') }}</span>
+      </div>
       <div class="footer-center">
-        <p class="footer-about-text">{{ $t('footer.aboutText1') }}</p>
-        <p class="footer-about-text">{{ $t('footer.privacyNote') }}</p>
+        <p class="footer-about-text">{{ t('footer.aboutText1') }}</p>
         <p class="footer-copyright">
           <span>&copy; {{ new Date().getFullYear() }} Rickfre</span> |
-          <a href="/LICENSE.txt" target="blank" rel="noopener noreferrer">{{ $t('footer.licenseLink') }}</a>
+          <a href="/LICENSE.txt" target="_blank" rel="noopener noreferrer">{{ t('footer.licenseLink') }}</a>
+            <br><span>{{ t('footer.privacyNote') }}</span>
         </p>
       </div>
       <nav class="footer-right">
-        <span>{{ $t('footer.madeByPrefix') }}</span>
-        <a href="https://rickfre.com.br" target="_blank" rel="noopener noreferrer" :title="$t('footer.personalSiteLinkTooltip')">
-           <img src="/logo rck.svg" :alt="$t('footer.personalLogoAlt')" class="footer-logo-personal"/>
+        <span>{{ t('footer.madeByPrefix') }}</span>
+        <a href="https://rickfre.com.br" target="_blank" rel="noopener noreferrer" :title="t('footer.personalSiteLinkTooltip')">
+          <img src="/logo rck.svg" :alt="t('footer.personalLogoAlt')" class="footer-logo-personal"/>
         </a>
       </nav>
     </footer>
 
+  </div> </template>
 
-  </div>
 
- 
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    /* Outros estilos globais que você possa querer, como fontes padrão, etc. */
+    /* font-family: 'Poppins', sans-serif; */ /* Você pode mover isso pra cá se quiser */
+  }
 
-</template>
+  html {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  *, *:before, *:after {
+    box-sizing: inherit;
+  }
+</style>
 
 <style scoped>
 /* ----- BLOCO STYLE SCOPED ----- */
@@ -1440,57 +1466,62 @@ p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-s
     /* line-height: 1; */
 }
 
-/* Container para os botões de idioma */
+/* Container EXTERNO para os botões de idioma */
 .language-switcher {
-  display: inline-flex; /* Coloca botões lado a lado */
+  display: inline-flex; /* Garante que o container tenha o tamanho dos filhos */
   border: 1px solid rgba(255, 255, 255, 0.5); /* Borda no tema claro */
-  border-radius: 5px; /* Similar a outros botões header */
+  border-radius: 5px;
   overflow: hidden;   /* Garante cantos arredondados */
-  margin-right: 10px; /* Espaço antes dos outros botões */
+  margin-right: 10px;
 }
 .dark-theme .language-switcher {
   border-color: rgba(255, 255, 255, 0.4); /* Borda no tema escuro */
 }
 
-/* Estilo individual dos botões de idioma */
-.lang-button {
-  background: none; /* Sem fundo por padrão */
-  border: none;     /* Sem borda padrão */
+/* Div que AGRUPA os botões PT/EN */
+.idioma-switch-group {
+  display: flex; /* Coloca os botões lado a lado DENTRO do grupo */
+}
+
+/* Estilo INDIVIDUAL dos botões de idioma (PT e EN) */
+.idioma-switch-button { /* <<-- MUDOU AQUI */
+  background: none;
+  border: none;
   /* Linha separadora fina entre os botões */
   border-left: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--header-text); /* Cor do texto do header */
+  color: var(--header-text); /* Cor do texto do header (garanta que essa variável CSS exista) */
   padding: 6px 10px;
   cursor: pointer;
-  font-size: 0.8em; /* Pequeno */
+  font-size: 0.85em; /* Levemente ajustado */
   font-weight: 500;
   opacity: 0.7; /* Levemente apagado quando inativo */
   font-family: inherit;
   transition: background-color 0.2s, opacity 0.2s;
 }
-.dark-theme .lang-button {
+.dark-theme .idioma-switch-button { /* <<-- MUDOU AQUI */
    border-left: 1px solid rgba(0, 0, 0, 0.2); /* Separador no tema escuro */
 }
-/* Remove a borda do primeiro botão (PT) */
-.lang-button:first-child {
+
+/* Remove a borda do PRIMEIRO botão (PT) */
+.idioma-switch-button:first-child { /* <<-- MUDOU AQUI */
   border-left: none;
 }
 
 /* Estilo para o botão do idioma ATIVO */
-.lang-button.lang-active {
+.idioma-switch-button.lang-active { /* <<-- MUDOU AQUI */
   background-color: rgba(255, 255, 255, 0.3); /* Fundo leve no tema claro */
   opacity: 1; /* Totalmente visível */
   font-weight: 700; /* Negrito */
 }
-.dark-theme .lang-button.lang-active {
+.dark-theme .idioma-switch-button.lang-active { /* <<-- MUDOU AQUI */
    background-color: rgba(0, 0, 0, 0.4); /* Fundo leve no tema escuro */
 }
 
 /* Efeito hover apenas para botão INATIVO */
-.lang-button:hover:not(.lang-active) {
+.idioma-switch-button:hover:not(.lang-active) { /* <<-- MUDOU AQUI */
   background-color: rgba(255, 255, 255, 0.1);
 }
-.dark-theme .lang-button:hover:not(.lang-active) {
+.dark-theme .idioma-switch-button:hover:not(.lang-active) { /* <<-- MUDOU AQUI */
    background-color: rgba(0, 0, 0, 0.1);
 }
-
 </style>
