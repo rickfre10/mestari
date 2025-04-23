@@ -2,7 +2,7 @@
 // ----- BLOCO SCRIPT SETUP -----
 import { ref, onMounted, onUnmounted, watchEffect, computed, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
-import i18nInstance, { loadLocaleMessages } from './i18n'; 
+import i18nInstance from './i18n'; 
 
 // --- ESTADO REATIVO ---
 const event = ref({ eventName: 'Meu Evento Padrão', blocks: [] });
@@ -587,19 +587,18 @@ function loadEventFromFile(e) {
 function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 
 
-/// --- FUNÇÃO CORRETA PARA TROCAR IDIOMA ---
-const changeLanguage = async (lang) => { // Recebe 'pt' ou 'en' como 'lang'
-  // Log simples para indicar a tentativa de mudança
-  console.log(`[App] Usuário clicou para mudar idioma para: ${lang}`);
-
-  // Chama a função importada de i18n.js para carregar e definir o idioma
-  // A própria loadLocaleMessages já contém logs de sucesso/erro e atualiza locale.value
-  await loadLocaleMessages(lang);
-
-  // Não precisa verificar retorno ou usar initialLocale aqui.
-  // A interface deve atualizar reativamente por causa da mudança em i18n.global.locale.value
+// --- FUNÇÃO SIMPLIFICADA PARA TROCAR IDIOMA ---
+const changeLanguage = (lang) => { // Não precisa ser async
+  if (locale.value !== lang && (lang === 'pt' || lang === 'en')) {
+      console.log(`[App SIMPLIFICADO] Usuário clicou para mudar idioma para: ${lang}`);
+      // Apenas atualiza o locale reativo e o global da instância
+      locale.value = lang; // Atualiza o locale reativo do useI18n()
+      // i18nInstance.global.locale.value = lang; // Redundante se locale.value acima funcionar
+      localStorage.setItem('mestariLocale', lang); // Salva a preferência
+      console.log(`[i18n SIMPLIFICADO] Idioma definido para: ${lang}`);
+  }
 };
-// --- FIM DA FUNÇÃO CORRETA ---
+// --- FIM DA FUNÇÃO SIMPLIFICADA ---
 
 // ----- FIM DO BLOCO SCRIPT SETUP -----
 </script>
