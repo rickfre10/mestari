@@ -1,20 +1,27 @@
 // vite.config.js
+
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+// 1. Importa o plugin vue-i18n
 import vueI18n from '@intlify/unplugin-vue-i18n/vite'
-import path from 'path'
+// O import 'path' não é mais necessário se não usarmos __dirname no 'include'
+// import path from 'path'
 
 export default defineConfig({
   plugins: [
     vue(),
+    // 2. Adiciona o plugin vueI18n
     vueI18n({
-      // TENTATIVA: Forçar compositionOnly para false
-      compositionOnly: false, // <<< ADICIONE ESTA LINHA
+      // Deixe a opção 'compositionOnly' como estava no último teste que falhou,
+      // ou remova a linha para usar o padrão (true).
+      // Exemplo (mantendo false, se foi o último teste):
+      // compositionOnly: false,
 
-      // Mantenha o include se ele estiver correto para sua estrutura
-      include: [path.resolve(__dirname, './src/locales/**')],
+      // REMOVEMOS a opção 'include' daqui:
+      // include: [path.resolve(__dirname, './src/locales/**')],
     })
+    // O plugin viteStaticCopy foi removido em passos anteriores (assumindo locales em /public ou pré-carregados)
   ],
-  base: '/' // importante para GitHub Pages
+  // 3. Base continua '/' para seu domínio personalizado
+  base: '/'
 })
-
