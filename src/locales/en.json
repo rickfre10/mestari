@@ -37,6 +37,7 @@
     "progressPrefix": "Progress:",
     "notesLabel": "Agenda and Notes:",
     "nextBlockButton": "Next Block", 
+    "fullscreenaria": "Fullscreen mode",
     "nextBlockTooltip": "Finish current block and move to the next one",
     "noActiveTitle": "No active block",
     "noActiveMsgIdle": "Use the \"Start\" button in the list below or click here to start the next idle block.",

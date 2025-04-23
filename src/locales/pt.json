@@ -39,6 +39,7 @@
     "nextBlockButton": "Próximo Bloco", 
     "nextBlockTooltip": "Concluir bloco atual e avançar para o próximo",
     "noActiveTitle": "Nenhum bloco ativo",
+    "fullscreenaria": "Modo tela cheia",
     "noActiveMsgIdle": "Use o botão \"Iniciar\" na lista abaixo ou clique aqui para iniciar o próximo bloco ocioso.",
     "noActiveMsgDone": "Todos os blocos foram concluídos.",
     "noActiveMsgEmpty": "Adicione blocos ao evento para começar.",

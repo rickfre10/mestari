@@ -1,6 +1,6 @@
 <script setup>
 // ----- BLOCO SCRIPT SETUP -----
-import { ref, onMounted, onUnmounted, watchEffect, computed, watch, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, onBeforeUnmount, watchEffect, computed, watch, nextTick } from 'vue';
 import { currentLocale, translations, setLocale } from './languageStore'; 
 
 // --- ESTADO REATIVO ---
@@ -14,7 +14,7 @@ const plannedTimeJustChanged = ref(false);
 let plannedTimeChangeTimeout = null;
 const addBlockNameInputRef = ref(null); 
 const messagesLoaded = ref(false);
-
+const isCurrentBlockFullscreen = ref(false);
 
 // --- VARIÁVEIS NÃO REATIVAS ---
 let intervalId = null;
@@ -293,6 +293,47 @@ onMounted(() => {
 
   console.log('onMounted: Finalizado.');
 });
+
+// --- Função para Alternar o Modo Tela Cheia ---
+function toggleCurrentBlockFullscreen() {
+  // 1. Inverte o valor da variável reativa (lembre-se do .value)
+  isCurrentBlockFullscreen.value = !isCurrentBlockFullscreen.value;
+
+  // 2. Adiciona ou remove o listener para a tecla ESC
+  if (isCurrentBlockFullscreen.value) {
+    // Se entrou em tela cheia, começa a "ouvir" o teclado
+    document.addEventListener('keydown', handleEscKeyFullscreen);
+    console.log("Fullscreen ATIVADO, listener ESC adicionado."); // Log para depuração
+  } else {
+    // Se saiu da tela cheia, para de "ouvir" o teclado
+    document.removeEventListener('keydown', handleEscKeyFullscreen);
+    console.log("Fullscreen DESATIVADO, listener ESC removido."); // Log para depuração
+  }
+}
+
+// --- Função para Lidar com a Tecla ESC ---
+function handleEscKeyFullscreen(event) {
+  console.log("Tecla pressionada:", event.key); // Log para depuração
+  // Verifica se a tecla pressionada foi ESC e se estamos em modo tela cheia
+  if (event.key === 'Escape' && isCurrentBlockFullscreen.value) {
+    console.log("ESC pressionado em modo fullscreen. Saindo..."); // Log para depuração
+    // Chama a função de toggle para sair do modo tela cheia
+    toggleCurrentBlockFullscreen();
+  }
+}
+
+// --- Hook para Limpar o Listener ao Sair do Componente ---
+onBeforeUnmount(() => {
+  // Garante que o listener seja removido se o componente for destruído
+  // enquanto ainda está em modo tela cheia.
+  document.removeEventListener('keydown', handleEscKeyFullscreen);
+  console.log("Componente desmontando, listener ESC removido (garantia)."); // Log para depuração
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleEscKeyFullscreen);
+});
+
 
 onUnmounted(() => {
   clearInterval(intervalId);
@@ -702,33 +743,51 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
         </div>
       </section>
 
-      <section class="current-block-section" v-if="currentBlock" :class="{ 'overrun-bg': currentBlock.status === 'overrun' || currentBlock.elapsedTime > currentBlock.duration }">
-        <h3>{{ translations.currentBlockSection.title }}</h3>
+<section class="current-block-section"
+               v-if="currentBlock"
+               :class="{
+                 'overrun-bg': currentBlock.status === 'overrun' || currentBlock.elapsedTime > currentBlock.duration,
+                 'fullscreen-mode': isCurrentBlockFullscreen
+               }">
+
+        <div class="section-title-header">
+          <h3>{{ translations.currentBlockSection.title }}</h3>
+          <button @click="toggleCurrentBlockFullscreen"
+                  class="fullscreen-toggle-button"
+                  :title="isCurrentBlockFullscreen ? translations.currentBlockSection.exitFullscreenTooltip : translations.currentBlockSection.enterFullscreenTooltip"
+                  aria-label="Alternar Tela Cheia">
+             <svg v-if="!isCurrentBlockFullscreen" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+             <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
+           </button>
+           </div>
+
         <div class="current-block-header">
-           <h4>{{ currentBlock.name || translations.currentBlockSection.fallbackName }}</h4>
+          <h4>{{ currentBlock.name || translations.currentBlockSection.fallbackName }}</h4>
           <span class="current-block-timer" :class="{ 'overtime-indicator': currentBlock.elapsedTime > currentBlock.duration }">
             {{ currentBlockDisplayTime }}
           </span>
         </div>
-         <div class="progress-bar-container" :title="`${translations.currentBlockSection.progressPrefix} ${Math.min(currentBlock.elapsedTime, currentBlock.duration)} / ${currentBlock.duration}s`">
+
+        <div class="progress-bar-container" :title="`${translations.currentBlockSection.progressPrefix} ${Math.min(currentBlock.elapsedTime, currentBlock.duration)} / ${currentBlock.duration}s`">
           <div class="progress-bar" :style="{ width: currentBlockProgress + '%' }" :class="{ 'progress-overrun': currentBlock.elapsedTime > currentBlock.duration }"></div>
         </div>
-         <label :for="'notes-' + currentBlock.id">{{ translations.currentBlockSection.notesLabel }}</label>
-        <textarea :id="'notes-' + currentBlock.id" v-model="currentBlock.notes"></textarea>
-         <button @click="goToNextBlock" class="next-block-button" :title="translations.currentBlockSection.nextBlockTooltip">
-          {{ translations.currentBlockSection.nextBlockButton }}
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
-        </button>
-      </section>
 
-      <section class="current-block-section" v-else>
-         <h3>{{ translations.currentBlockSection.noActiveTitle }}</h3>
-         <p v-if="event.blocks.length > 0 && event.blocks.some(b => b.status === 'idle')">{{ translations.currentBlockSection.noActiveMsgIdle }}</p>
-         <p v-else-if="event.blocks.length > 0">{{ translations.currentBlockSection.noActiveMsgDone }}</p>
-         <p v-else>{{ translations.currentBlockSection.noActiveMsgEmpty }}</p>
-         <button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button" :title="translations.currentBlockSection.startEventTooltip">
+        <label :for="'notes-' + currentBlock.id">{{ translations.currentBlockSection.notesLabel }}</label>
+
+        <textarea :id="'notes-' + currentBlock.id" v-model="currentBlock.notes"></textarea>
+
+        <button @click="goToNextBlock" class="next-block-button" :title="translations.currentBlockSection.nextBlockTooltip">
+          {{ translations.currentBlockSection.nextBlockButton }}
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+        </button>
+      </section> <section class="current-block-section" v-else>
+        <h3>{{ translations.currentBlockSection.noActiveTitle }}</h3>
+        <p v-if="event.blocks.length > 0 && event.blocks.some(b => b.status === 'idle')">{{ translations.currentBlockSection.noActiveMsgIdle }}</p>
+        <p v-else-if="event.blocks.length > 0">{{ translations.currentBlockSection.noActiveMsgDone }}</p>
+        <p v-else>{{ translations.currentBlockSection.noActiveMsgEmpty }}</p>
+        <button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button" :title="translations.currentBlockSection.startEventTooltip">
           {{ translations.currentBlockSection.startEventButton }}
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
       </section>
 
@@ -1671,6 +1730,200 @@ p { text-align: center; color: var(--text-muted-color); margin-top: 30px; font-s
   }
   /* (Fim do Reset Grid) */
 
+}
+
+/* ========= CSS PARA MODO TELA CHEIA (Fullscreen) ========= */
+/* ======================================================= */
+
+/* Classe aplicada à section .current-block-section quando em modo fullscreen */
+.current-block-section.fullscreen-mode {
+  position: fixed; /* Posição fixa sobre tudo */
+  top: 0;
+  left: 0;
+  width: 100vw; /* Largura total da viewport */
+  height: 100vh; /* Altura total da viewport */
+  z-index: 1000; /* Fica na frente de outros elementos (ajuste se necessário) */
+  background-color: var(--bg-color); /* Usa o fundo do tema para cobrir o resto */
+  padding: 3vw; /* Padding relativo à viewport (ajuste como preferir) */
+  box-sizing: border-box;
+  overflow-y: auto; /* Permite scroll se conteúdo for maior que a tela */
+  display: flex; /* Usar flexbox para organizar o conteúdo interno */
+  flex-direction: column; /* Empilha os itens verticalmente */
+  align-items: center; /* Centraliza horizontalmente */
+  justify-content: center; /* Tenta centralizar verticalmente (ajuste conforme necessário) */
+}
+
+/* Ajustes nos elementos INTERNOS quando em modo fullscreen */
+.fullscreen-mode .current-block-header {
+   width: 90%; /* Limita largura do cabeçalho */
+   max-width: 1200px; /* Máximo para não ficar enorme em telas gigantes */
+   margin-bottom: 2vh; /* Espaçamento relativo */
+   border-bottom: 1px solid var(--item-border); /* Linha separadora */
+   padding-bottom: 1vh; /* Espaçamento relativo */
+   /* Garante que o botão de toggle não interfira no layout flex do header */
+   position: relative;
+   display: flex; /* Manter flex para alinhar h4 e timer */
+   justify-content: space-between;
+   align-items: center;
+   flex-wrap: wrap; /* Permite quebra se necessário */
+}
+
+.fullscreen-mode .current-block-header h4 {
+   font-size: calc(2em + 2vw); /* Fonte bem maior, adapta à viewport */
+   text-align: center;
+   margin-bottom: 1vh; /* Espaço abaixo do título */
+   width: 100%; /* Ocupa toda a largura no modo fullscreen */
+   order: 1; /* Garante que o título venha primeiro se quebrar linha */
+}
+
+.fullscreen-mode .current-block-timer {
+   font-size: calc(3em + 3vw); /* Timer gigante, adapta à viewport */
+   font-weight: 700;
+   text-align: center;
+   width: 100%; /* Ocupa toda a largura no modo fullscreen */
+   order: 2; /* Timer vem depois do título */
+   line-height: 1.1;
+}
+
+/* Barra de progresso maior no modo fullscreen */
+.fullscreen-mode .progress-bar-container {
+   width: 80%;
+   max-width: 1000px;
+   height: 25px; /* Barra de progresso mais alta */
+   margin-top: 2vh;
+   margin-bottom: 3vh;
+   order: 3; /* Ordem visual */
+}
+
+/* Ajustar área de texto e seu label no modo fullscreen */
+.fullscreen-mode label[for^="notes-"] {
+   font-size: 1.5em;
+   margin-top: 2vh;
+   text-align: center;
+   width: 100%;
+   order: 4; /* Ordem visual */
+}
+
+.fullscreen-mode textarea {
+   width: 80%;
+   max-width: 1000px;
+   min-height: 200px; /* Ou mais, dependendo do espaço */
+   font-size: 1.3em;
+   flex-grow: 1; /* Não deixa crescer indefinidamente */
+   flex-shrink: 1;
+   margin-top: 1vh;
+   margin-bottom: 3vh; /* Espaço antes do botão 'próximo' */
+   order: 5; /* Ordem visual */
+}
+
+/* Posicionar o botão de SAIR da tela cheia (ícone X) */
+.fullscreen-mode .fullscreen-toggle-button {
+  position: absolute; /* Posição absoluta relativa ao .current-block-section.fullscreen-mode */
+  top: 20px;          /* Distância do topo */
+  right: 20px;         /* Distância da direita */
+  background: rgba(128, 128, 128, 0.2); /* Fundo levemente visível */
+  border: none;
+  border-radius: 50%; /* Botão redondo */
+  padding: 10px;      /* Espaçamento interno */
+  cursor: pointer;
+  z-index: 1001;      /* Garante que fique sobre outro conteúdo da seção */
+  color: var(--text-muted-color); /* Cor do ícone */
+  line-height: 0;     /* Ajuste fino para centralizar SVG */
+  display: flex;      /* Para alinhar ícone interno */
+  align-items: center;
+  justify-content: center;
+}
+.fullscreen-mode .fullscreen-toggle-button:hover {
+   background: rgba(128, 128, 128, 0.4);
+}
+
+/* Botão "Próximo Bloco" no modo fullscreen */
+.fullscreen-mode .next-block-button {
+  /* display: none; */ /* Descomente esta linha se quiser ESCONDER o botão */
+  margin-top: 2vh;
+  font-size: 1.3em;
+  padding: 15px 30px;
+  order: 6; /* Ordem visual */
+}
+
+/* --- Estilo base para o botão de ENTRAR em tela cheia (quando NÃO está em fullscreen) --- */
+.fullscreen-toggle-button {
+  background: none;
+  border: none;
+  padding: 2px;
+  margin-left: 10px; /* Espaço entre ele e o título/timer */
+  cursor: pointer;
+  color: var(--text-muted-color);
+  line-height: 1; /* Ajuste para alinhar SVG */
+  vertical-align: middle; /* Tenta alinhar com o texto ao redor */
+}
+.fullscreen-toggle-button:hover {
+   opacity: 0.7;
+}
+
+/* ======================================================= */
+/* ========= AJUSTE POSIÇÃO BOTÃO FULLSCREEN ========= */
+/* ======================================================= */
+
+/* Nova Div que agrupa H3 e o Botão */
+.section-title-header {
+  display: flex;                 /* Usa flexbox */
+  justify-content: space-between; /* Título na esquerda, botão na direita */
+  align-items: center;           /* Alinha verticalmente */
+  margin-bottom: 10px;         /* Espaço abaixo (ajuste conforme necessário) */
+  /* Copie a borda inferior do H3 original se quiser aqui */
+  /* border-bottom: 1px solid var(--item-border); */
+  /* padding-bottom: 10px; */
+}
+
+/* Ajusta o H3 que está DENTRO da nova div */
+.section-title-header h3 {
+  margin-top: 0;    /* Remove margem padrão do H3 */
+  margin-bottom: 0; /* Remove margem padrão do H3 */
+  border-bottom: none; /* Remove a borda do H3 se ela foi movida para o pai */
+  padding-bottom: 0; /* Remove o padding do H3 se a borda foi movida */
+  /* Mantém outros estilos do H3 original se houver */
+  color: var(--text-muted-color);
+  font-weight: 500;
+  font-size: 1.2em;
+}
+
+/* Ajusta o estilo BASE do botão de toggle (fora do modo fullscreen) */
+.fullscreen-toggle-button {
+  background: none;
+  border: none;
+  padding: 0; /* Remove padding extra se houver */
+  margin-left: 10px; /* Adiciona um espaço à esquerda do botão */
+  cursor: pointer;
+  color: var(--text-muted-color);
+  line-height: 1;
+  vertical-align: middle; /* Tenta alinhar */
+}
+.fullscreen-toggle-button:hover {
+   opacity: 0.7;
+}
+
+/* IMPORTANTE: Mantém o CSS para o botão QUANDO JÁ ESTÁ em modo fullscreen */
+/* Esta regra posiciona o botão de SAIR (X) no canto superior direito da tela cheia */
+.fullscreen-mode .fullscreen-toggle-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(128, 128, 128, 0.2);
+  border: none;
+  border-radius: 50%;
+  padding: 10px;
+  cursor: pointer;
+  z-index: 1001;
+  color: var(--text-muted-color);
+  line-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0; /* Reseta margem no modo fullscreen */
+}
+.fullscreen-mode .fullscreen-toggle-button:hover {
+   background: rgba(128, 128, 128, 0.4);
 }
 
 </style>
