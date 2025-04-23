@@ -587,28 +587,19 @@ function loadEventFromFile(e) {
 function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 
 
-// ---  FUNÇÃO PARA TROCAR IDIOMA --- 
-async function changeLanguage(newLocale) {
-  if (locale.value !== newLocale && (newLocale === 'pt' || newLocale === 'en')) {
-    console.log(`[i18n] Tentando mudar idioma para: ${newLocale}`);
-    const loaded = await loadLocaleMessages(newLocale); // Chama a função de carregar
-    if (loaded) { // Verifica se o carregamento teve sucesso
-    messagesLoaded.value = true; // << DEFINE A FLAG COMO TRUE AQUI
-    console.log("[App] Mensagens iniciais carregadas, pronto para renderizar.")
-    } else {
-    console.error("[App] Falha crítica ao carregar mensagens iniciais. App pode não funcionar corretamente.");
-      console.warn(`[i18n] Não foi possível carregar ${newLocale}, idioma não alterado.`);
-    }
-    console.log(`onMounted: Mensagens para '${initialLocale}' carregadas (sucesso: ${loaded}).`);
-  }
+/// --- FUNÇÃO CORRETA PARA TROCAR IDIOMA ---
+const changeLanguage = async (lang) => { // Recebe 'pt' ou 'en' como 'lang'
+  // Log simples para indicar a tentativa de mudança
+  console.log(`[App] Usuário clicou para mudar idioma para: ${lang}`);
 
-  const changeLanguage = async (lang) => {
+  // Chama a função importada de i18n.js para carregar e definir o idioma
+  // A própria loadLocaleMessages já contém logs de sucesso/erro e atualiza locale.value
   await loadLocaleMessages(lang);
-  console.log(`Idioma alterado para: ${lang}`);
-  // O locale.value será atualizado automaticamente pelo loadLocaleMessages
+
+  // Não precisa verificar retorno ou usar initialLocale aqui.
+  // A interface deve atualizar reativamente por causa da mudança em i18n.global.locale.value
 };
-}
-// FIM FUNÇÃO TROCAR IDIOMA
+// --- FIM DA FUNÇÃO CORRETA ---
 
 // ----- FIM DO BLOCO SCRIPT SETUP -----
 </script>
