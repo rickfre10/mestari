@@ -235,10 +235,6 @@ onMounted(async () => {
   // CORREÇÃO AQUI: Usa 'i18nInstance.global' em vez de 'this.$i18n'
   console.log('PT Messages:', JSON.stringify(i18nInstance.global.getLocaleMessage('pt'), null, 2));
 
- // const initialLocale = locale.value; // Correto: usa 'locale' do useI18n
-  //console.log(`onMounted: Carregando locale inicial '${initialLocale}'...`);
-  //await loadLocaleMessages(initialLocale); // Correto: usa a função importada e 'locale'
-  //console.log(`onMounted: Mensagens para '${initialLocale}' carregadas (ou falhou).`);
 
   // Carregamento do evento (lógica original mantida)
   const savedEvent = localStorage.getItem('mestariEventData');
