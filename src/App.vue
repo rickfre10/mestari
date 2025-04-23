@@ -602,6 +602,10 @@ const changeLanguage = (lang) => { // Não precisa ser async
 <template>
   <div class="app-container" :class="{ 'dark-theme': isDarkMode }">
     <header>
+
+    <p style="background-color: yellow; color: black; padding: 5px; font-weight: bold; border: 1px solid red;">
+  DEBUG LOCALE: {{ locale }}
+</p>
       <h1 class="app-title">
         {{ t('header.title') }} <img src="/favicon.png" :alt="t('header.logoAlt')" class="header-logo">
       </h1>
