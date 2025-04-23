@@ -1,8 +1,7 @@
 <script setup>
 // ----- BLOCO SCRIPT SETUP -----
 import { ref, onMounted, onUnmounted, watchEffect, computed, watch, nextTick } from 'vue';
-import { useI18n } from 'vue-i18n';
-import i18nInstance from './i18n'; 
+import { currentLocale, translations, setLocale } from './languageStore'; 
 
 // --- ESTADO REATIVO ---
 const event = ref({ eventName: 'Meu Evento Padrão', blocks: [] });
@@ -16,8 +15,6 @@ let plannedTimeChangeTimeout = null;
 const addBlockNameInputRef = ref(null); 
 const messagesLoaded = ref(false);
 
-// --- Obtém funcionalidades do i18n ---
-const { t, locale } = useI18n()
 
 // --- VARIÁVEIS NÃO REATIVAS ---
 let intervalId = null;
@@ -76,6 +73,11 @@ function parseTimeToSeconds(timeString) {
   return seconds;
 }
 
+// Função para trocar idioma (agora chama setLocale do store)
+const changeLanguage = (lang) => {
+  setLocale(lang);
+};
+
 const statusMap = {
   idle: 'Ocioso',
   running: 'Rodando',
@@ -94,7 +96,7 @@ const totalPlannedDuration = computed(() => {
   return formatTime(totalSeconds);
 });
 
-// Tempo total REAL decorrido no evento (LÓGICA REATORADA E SIMPLIFICADA)
+// Tempo total REAL decorrido no evento
 const totalEventElapsedTime = computed(() => {
   console.log("Calculando totalEventElapsedTime (Lógica Refatorada)..."); // Log para debug
   // Soma o elapsedTime de TODOS os blocos que não estão 'idle'
@@ -182,7 +184,7 @@ const themeButtonText = computed(() => {
   }
 });*/
 
-// NOVO: Observa mudanças profundas no objeto 'event' para salvar
+// Observa mudanças profundas no objeto 'event' para salvar
 watch(event, (newEventValue) => {
   // Este log só deve aparecer DEPOIS de uma mudança real no evento
   console.log("--- DEBUG: watch 'event' disparado ---");
@@ -229,13 +231,8 @@ function handleVisibilityChange() {
 }
 
 
-onMounted(async () => {
-  console.log('Locale atual no mounted:', locale.value); // Correto: usa 'locale' do useI18n
-
-  // CORREÇÃO AQUI: Usa 'i18nInstance.global' em vez de 'this.$i18n'
-  console.log('PT Messages:', JSON.stringify(i18nInstance.global.getLocaleMessage('pt'), null, 2));
-
-
+onMounted(() => {
+  
   // Carregamento do evento (lógica original mantida)
   const savedEvent = localStorage.getItem('mestariEventData');
   if (savedEvent) {
@@ -583,18 +580,6 @@ function loadEventFromFile(e) {
 function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
 
 
-// --- FUNÇÃO SIMPLIFICADA PARA TROCAR IDIOMA ---
-const changeLanguage = (lang) => { // Não precisa ser async
-  if (locale.value !== lang && (lang === 'pt' || lang === 'en')) {
-      console.log(`[App SIMPLIFICADO] Usuário clicou para mudar idioma para: ${lang}`);
-      // Apenas atualiza o locale reativo e o global da instância
-      locale.value = lang; // Atualiza o locale reativo do useI18n()
-      // i18nInstance.global.locale.value = lang; // Redundante se locale.value acima funcionar
-      localStorage.setItem('mestariLocale', lang); // Salva a preferência
-      console.log(`[i18n SIMPLIFICADO] Idioma definido para: ${lang}`);
-  }
-};
-// --- FIM DA FUNÇÃO SIMPLIFICADA ---
 
 // ----- FIM DO BLOCO SCRIPT SETUP -----
 </script>
@@ -602,76 +587,75 @@ const changeLanguage = (lang) => { // Não precisa ser async
 <template>
   <div class="app-container" :class="{ 'dark-theme': isDarkMode }">
     <header>
-
       <h1 class="app-title">
-        {{ t('header.title') }} <img src="/favicon.png" :alt="t('header.logoAlt')" class="header-logo">
+        {{ translations.header.title }} <img src="/favicon.png" :alt="translations.header.logoAlt" class="header-logo">
       </h1>
 
       <div class="header-actions">
-
         <div class="language-switcher">
           <div class="idioma-switch-group">
             <button
               @click="changeLanguage('pt')"
-              :class="{ 'lang-active': locale === 'pt' }"
+              :class="{ 'lang-active': currentLocale === 'pt' }"
               class="idioma-switch-button"
             >
               PT
             </button>
             <button
               @click="changeLanguage('en')"
-              :class="{ 'lang-active': locale === 'en' }"
+              :class="{ 'lang-active': currentLocale === 'en' }"
               class="idioma-switch-button"
             >
               EN
             </button>
           </div>
-        </div> <a
+        </div>
+        <a
           href="http://link.mercadopago.com.br/rickfre"
           target="_blank"
           rel="noopener noreferrer"
           class="theme-toggle-button coffee-button"
-          :title="t('header.coffeeButtonTooltip')"
+          :title="translations.header.coffeeButtonTooltip"
         >
-          {{ t('header.coffeeButton') }}
+          {{ translations.header.coffeeButton }}
         </a>
 
         <button
           @click="toggleTheme"
           class="theme-toggle-button"
-          :title="t('header.changeToPrefix') + (isDarkMode ? t('header.themeToggleLight') : t('header.themeToggleDark'))"
+          :title="translations.header.changeToPrefix + (isDarkMode ? translations.header.themeToggleLight : translations.header.themeToggleDark)"
         >
-          {{ t(isDarkMode ? 'header.themeToggleLight' : 'header.themeToggleDark') }}
+          {{ isDarkMode ? translations.header.themeToggleLight : translations.header.themeToggleDark }}
         </button>
-
-      </div> </header>
+      </div>
+    </header>
 
     <main>
       <section class="global-event-actions">
-        <button @click="startNewEvent" class="header-button new-event" :title="t('eventActions.tooltipNew')">
+        <button @click="startNewEvent" class="header-button new-event" :title="translations.eventActions.tooltipNew">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-          {{ t('eventActions.newEvent') }}
+          {{ translations.eventActions.newEvent }}
         </button>
-        <button @click="triggerFileInput" class="header-button" :title="t('eventActions.tooltipUpload')">
+        <button @click="triggerFileInput" class="header-button" :title="translations.eventActions.tooltipUpload">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          {{ t('eventActions.uploadEvent') }}
+          {{ translations.eventActions.uploadEvent }}
         </button>
         <input type="file" accept=".json,application/json" @change="loadEventFromFile" ref="fileInputRef" style="display: none;">
-        <button @click="saveEventToFile" class="header-button" :title="t('eventActions.tooltipSave')">
+        <button @click="saveEventToFile" class="header-button" :title="translations.eventActions.tooltipSave">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-          {{ t('eventActions.saveEvent') }}
+          {{ translations.eventActions.saveEvent }}
         </button>
-        <button @click="resetEntireEvent" class="header-button reset-event" :title="t('eventActions.tooltipReset')">
+        <button @click="resetEntireEvent" class="header-button reset-event" :title="translations.eventActions.tooltipReset">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-          {{ t('eventActions.resetEvent') }}
+          {{ translations.eventActions.resetEvent }}
         </button>
       </section>
 
       <section class="event-name-section">
-        <label for="eventNameInput">{{ t('eventNameSection.label') }}</label>
+        <label for="eventNameInput">{{ translations.eventNameSection.label }}</label>
         <div v-if="!isEditingEventName" class="event-name-view">
           <span class="event-name-display">{{ event.eventName }}</span>
-          <button @click="startEditEventName" class="inline-edit-button" :title="t('eventNameSection.editTooltip')">
+          <button @click="startEditEventName" class="inline-edit-button" :title="translations.eventNameSection.editTooltip">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
           </button>
         </div>
@@ -683,32 +667,32 @@ const changeLanguage = (lang) => { // Não precisa ser async
             @keyup.enter="confirmEditEventName"
             @keyup.esc="cancelEditEventName"
             ref="eventNameInputRef"
-            :placeholder="t('eventNameSection.placeholder')"
+            :placeholder="translations.eventNameSection.placeholder"
           >
-          <button @click="confirmEditEventName" class="inline-confirm-button" :title="t('eventNameSection.confirmTooltip')">
+          <button @click="confirmEditEventName" class="inline-confirm-button" :title="translations.eventNameSection.confirmTooltip">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </button>
-          <button @click="cancelEditEventName" class="inline-cancel-button" :title="t('eventNameSection.cancelTooltip')">
+          <button @click="cancelEditEventName" class="inline-cancel-button" :title="translations.eventNameSection.cancelTooltip">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
       </section>
 
       <section class="event-status-section">
-        <h3>{{ t('statusSection.title') }}</h3>
+        <h3>{{ translations.statusSection.title }}</h3>
         <div class="status-grid">
           <div class="status-item">
-            <span>{{ t('statusSection.planned') }}</span>
+            <span>{{ translations.statusSection.planned }}</span>
             <strong :class="{ 'highlight-change': plannedTimeJustChanged }">
               {{ totalPlannedDuration }}
             </strong>
           </div>
           <div class="status-item">
-            <span>{{ t('statusSection.elapsed') }}</span>
+            <span>{{ translations.statusSection.elapsed }}</span>
             <strong>{{ formatTime(totalEventElapsedTime) }}</strong>
           </div>
           <div class="status-item">
-            <span>{{ t('statusSection.delaySlack') }}</span>
+            <span>{{ translations.statusSection.delaySlack }}</span>
             <strong :class="{ delay: cumulativeEventDelay.seconds > 5, slack: cumulativeEventDelay.seconds < -5 }">
               {{ cumulativeEventDelay.sign }}{{ cumulativeEventDelay.time }}
             </strong>
@@ -717,126 +701,125 @@ const changeLanguage = (lang) => { // Não precisa ser async
       </section>
 
       <section class="current-block-section" v-if="currentBlock" :class="{ 'overrun-bg': currentBlock.status === 'overrun' || currentBlock.elapsedTime > currentBlock.duration }">
-        <h3>{{ t('currentBlockSection.title') }}</h3>
+        <h3>{{ translations.currentBlockSection.title }}</h3>
         <div class="current-block-header">
-          <h4>{{ currentBlock.name || t('currentBlockSection.fallbackName') }}</h4>
+           <h4>{{ currentBlock.name || translations.currentBlockSection.fallbackName }}</h4>
           <span class="current-block-timer" :class="{ 'overtime-indicator': currentBlock.elapsedTime > currentBlock.duration }">
             {{ currentBlockDisplayTime }}
           </span>
         </div>
-        <div class="progress-bar-container" :title="`${t('currentBlockSection.progressPrefix')} ${Math.min(currentBlock.elapsedTime, currentBlock.duration)} / ${currentBlock.duration}s`">
+         <div class="progress-bar-container" :title="`${translations.currentBlockSection.progressPrefix} ${Math.min(currentBlock.elapsedTime, currentBlock.duration)} / ${currentBlock.duration}s`">
           <div class="progress-bar" :style="{ width: currentBlockProgress + '%' }" :class="{ 'progress-overrun': currentBlock.elapsedTime > currentBlock.duration }"></div>
         </div>
-        <label :for="'notes-' + currentBlock.id">{{ t('currentBlockSection.notesLabel') }}</label>
+         <label :for="'notes-' + currentBlock.id">{{ translations.currentBlockSection.notesLabel }}</label>
         <textarea :id="'notes-' + currentBlock.id" v-model="currentBlock.notes"></textarea>
-        <button @click="goToNextBlock" class="next-block-button" :title="t('currentBlockSection.nextBlockTooltip')">
-          {{ t('currentBlockSection.nextBlockButton') }}
+         <button @click="goToNextBlock" class="next-block-button" :title="translations.currentBlockSection.nextBlockTooltip">
+          {{ translations.currentBlockSection.nextBlockButton }}
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
       </section>
 
       <section class="current-block-section" v-else>
-        <h3>{{ t('currentBlockSection.noActiveTitle') }}</h3>
-        <p v-if="event.blocks.length > 0 && event.blocks.some(b => b.status === 'idle')">{{ t('currentBlockSection.noActiveMsgIdle') }}</p>
-        <p v-else-if="event.blocks.length > 0">{{ t('currentBlockSection.noActiveMsgDone') }}</p>
-        <p v-else>{{ t('currentBlockSection.noActiveMsgEmpty') }}</p>
-        <button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button" :title="t('currentBlockSection.startEventTooltip')">
-          {{ t('currentBlockSection.startEventButton') }}
+         <h3>{{ translations.currentBlockSection.noActiveTitle }}</h3>
+         <p v-if="event.blocks.length > 0 && event.blocks.some(b => b.status === 'idle')">{{ translations.currentBlockSection.noActiveMsgIdle }}</p>
+         <p v-else-if="event.blocks.length > 0">{{ translations.currentBlockSection.noActiveMsgDone }}</p>
+         <p v-else>{{ translations.currentBlockSection.noActiveMsgEmpty }}</p>
+         <button v-if="event.blocks.some(b => b.status === 'idle')" @click="goToNextBlock" class="next-block-button" :title="translations.currentBlockSection.startEventTooltip">
+          {{ translations.currentBlockSection.startEventButton }}
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
       </section>
 
       <section class="add-block-form-section">
-        <h3>{{ t('addBlockSection.title') }}</h3>
+         <h3>{{ translations.addBlockSection.title }}</h3>
         <div>
-          <label for="blockName">{{ t('addBlockSection.nameLabel') }} </label>
-          <input type="text" id="blockName" ref="addBlockNameInputRef" v-model="newBlockName" :placeholder="t('addBlockSection.namePlaceholder')"/>
+           <label for="blockName">{{ translations.addBlockSection.nameLabel }} </label>
+           <input type="text" id="blockName" ref="addBlockNameInputRef" v-model="newBlockName" :placeholder="translations.addBlockSection.namePlaceholder"/>
         </div>
         <div>
-          <label for="blockDuration">{{ t('addBlockSection.durationLabel') }} </label>
-          <input type="text" id="blockDuration" v-model="newBlockDurationString" :placeholder="t('addBlockSection.durationPlaceholder')"/>
+           <label for="blockDuration">{{ translations.addBlockSection.durationLabel }} </label>
+           <input type="text" id="blockDuration" v-model="newBlockDurationString" :placeholder="translations.addBlockSection.durationPlaceholder"/>
         </div>
-        <button @click="addBlock" class="add-block-button" :title="t('addBlockSection.addTooltip')">
+         <button @click="addBlock" class="add-block-button" :title="translations.addBlockSection.addTooltip">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-          {{ t('addBlockSection.addButton') }}
+          {{ translations.addBlockSection.addButton }}
         </button>
       </section>
 
       <section class="block-list-section">
-        <h2>{{ t('blockListSection.title') }}</h2>
+         <h2>{{ translations.blockListSection.title }}</h2>
         <TransitionGroup v-if="event.blocks.length > 0" tag="ul" name="list" class="block-list-ul">
           <li v-for="(block, index) in event.blocks" :key="block.id" :class="{ active: index === currentBlockIndex }">
             <div class="block-info">
               <span>
-                {{ block.name || t('blockListSection.blockInfo.noName') }} | {{ formatTime(block.duration) }} |
-                {{ t('blockListSection.blockInfo.elapsedPrefix') }}: <span :class="{ 'overtime-indicator': block.elapsedTime > block.duration }">{{ formatTime(block.elapsedTime) }}</span> |
-                {{ t('blockListSection.blockInfo.statusPrefix') }}: {{ t('status.' + block.status, block.status) }} <span v-if="block.completionDelay !== null" :class="{ delay: block.completionDelay > 5, slack: block.completionDelay < -5 }">
-                  ({{ t('blockListSection.blockInfo.deviationPrefix') }}: {{ block.completionDelay >= 0 ? '+' : '' }}{{ formatTime(block.completionDelay) }})
+                 {{ block.name || translations.blockListSection.blockInfo.noName }} | {{ formatTime(block.duration) }} |
+                 {{ translations.blockListSection.blockInfo.elapsedPrefix }}: <span :class="{ 'overtime-indicator': block.elapsedTime > block.duration }">{{ formatTime(block.elapsedTime) }}</span> |
+                 {{ translations.blockListSection.blockInfo.statusPrefix }}: {{ translations.status[block.status] || block.status }} <span v-if="block.completionDelay !== null" :class="{ delay: block.completionDelay > 5, slack: block.completionDelay < -5 }">
+                   ({{ translations.blockListSection.blockInfo.deviationPrefix }}: {{ block.completionDelay >= 0 ? '+' : '' }}{{ formatTime(block.completionDelay) }})
                 </span>
               </span>
             </div>
             <div class="block-actions-row">
               <span class="control-buttons-group">
-                  <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" :title="t('blockListSection.tooltips.start')">
+                   <button v-if="block.status === 'idle'" @click="startBlock(block.id)" class="control-button start" :title="translations.blockListSection.tooltips.start">
                     <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polygon points="5 3 19 12 5 21 5 3"> </polygon> </svg>
                   </button>
-                  <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" :title="t('blockListSection.tooltips.pause')">
+                   <button v-if="(block.status === 'running' || block.status === 'overrun') && index === currentBlockIndex" @click="pauseBlock()" class="control-button pause" :title="translations.blockListSection.tooltips.pause">
                     <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <rect x="6" y="4" width="4" height="16"> </rect><rect x="14" y="4" width="4" height="16"> </rect> </svg>
                   </button>
-                  <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" :title="t('blockListSection.tooltips.resume')">
+                   <button v-if="block.status === 'paused' && index === currentBlockIndex" @click="resumeBlock()" class="control-button resume" :title="translations.blockListSection.tooltips.resume">
                      <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polygon points="5 3 19 12 5 21 5 3"> </polygon> </svg>
                   </button>
-                  <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" :title="t('blockListSection.tooltips.reset')">
+                   <button v-if="block.status !== 'idle'" @click="resetBlock(block.id)" class="control-button reset" :title="translations.blockListSection.tooltips.reset">
                     <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polyline points="23 4 23 10 17 10"> </polyline><polyline points="1 20 1 14 7 14"> </polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                   </button>
-                  <button @click="deleteBlock(block.id)" class="control-button delete" :title="t('blockListSection.tooltips.delete')">
+                   <button @click="deleteBlock(block.id)" class="control-button delete" :title="translations.blockListSection.tooltips.delete">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"> <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                   </button>
               </span>
               <span class="reorder-buttons-group">
-                  <button @click="moveBlockUp(index)" :disabled="index === 0" :title="t('blockListSection.tooltips.moveUp')">
+                   <button @click="moveBlockUp(index)" :disabled="index === 0" :title="translations.blockListSection.tooltips.moveUp">
                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"><polyline points="18 15 12 9 6 15"></polyline></svg>
                   </button>
-                  <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" :title="t('blockListSection.tooltips.moveDown')">
+                   <button @click="moveBlockDown(index)" :disabled="index === event.blocks.length - 1" :title="translations.blockListSection.tooltips.moveDown">
                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="button-icon"><polyline points="6 9 12 15 18 9"></polyline></svg>
                   </button>
               </span>
             </div>
             <div class="notes-area">
-              <textarea :id="'notes-li-' + block.id" v-model="block.notes" :placeholder="t('blockListSection.notesPlaceholder')" rows="3"></textarea>
+               <textarea :id="'notes-li-' + block.id" v-model="block.notes" :placeholder="translations.blockListSection.notesPlaceholder" rows="3"></textarea>
             </div>
           </li>
         </TransitionGroup>
         <div v-else class="empty-list-message">
-          <p>{{ t('blockListSection.emptyMessage') }}</p>
-          <p><em>{{ t('blockListSection.useFormMessage') }}</em></p>
+           <p>{{ translations.blockListSection.emptyMessage }}</p>
+           <p><em>{{ translations.blockListSection.useFormMessage }}</em></p>
         </div>
       </section>
     </main>
 
     <footer class="app-footer-revised">
       <div class="footer-left">
-        <img src="/favicon.png" :alt="t('header.logoAlt')" class="footer-logo-app"/>
-        <span class="footer-app-name">{{ t('footer.appName') }}</span>
+         <img src="/favicon.png" :alt="translations.header.logoAlt" class="footer-logo-app"/>
+         <span class="footer-app-name">{{ translations.footer.appName }}</span>
       </div>
       <div class="footer-center">
-        <p class="footer-about-text">{{ t('footer.aboutText1') }}</p>
+         <p class="footer-about-text">{{ translations.footer.aboutText1 }}</p>
         <p class="footer-copyright">
           <span>&copy; {{ new Date().getFullYear() }} Rickfre</span> |
-          <a href="/LICENSE.txt" target="_blank" rel="noopener noreferrer">{{ t('footer.licenseLink') }}</a>
-            <br><span>{{ t('footer.privacyNote') }}</span>
-        </p>
+           <a href="/LICENSE.txt" target="_blank" rel="noopener noreferrer">{{ translations.footer.licenseLink }}</a>
+            <br><span>{{ translations.footer.privacyNote }}</span> </p>
       </div>
       <nav class="footer-right">
-        <span>{{ t('footer.madeByPrefix') }}</span>
-        <a href="https://rickfre.com.br" target="_blank" rel="noopener noreferrer" :title="t('footer.personalSiteLinkTooltip')">
-          <img src="/logo rck.svg" :alt="t('footer.personalLogoAlt')" class="footer-logo-personal"/>
+         <span>{{ translations.footer.madeByPrefix }}</span>
+         <a href="https://rickfre.com.br" target="_blank" rel="noopener noreferrer" :title="translations.footer.personalSiteLinkTooltip">
+           <img src="/logo rck.svg" :alt="translations.footer.personalLogoAlt" class="footer-logo-personal"/>
         </a>
       </nav>
     </footer>
 
-  </div> </template>
-
+  </div>
+</template>
 
 <style>
   body {

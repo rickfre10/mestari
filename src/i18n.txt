@@ -1,4 +1,4 @@
-// src/i18n.js - VERSÃO SIMPLIFICADA (SEM CARREGAMENTO DINÂMICO)
+/*// src/i18n.js - VERSÃO SIMPLIFICADA (SEM CARREGAMENTO DINÂMICO)
 import { createI18n } from 'vue-i18n';
 
 // Importa AMBOS os idiomas estaticamente de 'src'
@@ -36,4 +36,4 @@ const i18n = createI18n({
 
 // NÃO PRECISAMOS MAIS DE loadLocaleMessages NESTA VERSÃO
 
-export default i18n;
+export default i18n;/
