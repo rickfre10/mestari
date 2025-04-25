@@ -17,7 +17,7 @@ O Mestari é um aplicativo que te ajuda a organizar e manter sua reunião ou eve
 2.  **Nomeie seu Evento:** Clique no ícone de lápis (✏️) ao lado de "Nome do Evento" para definí-lo.
 3.  **Adicione Blocos:** Use a seção "Adicionar Novo Bloco" para inserir os temas da sua pauta.
     * **Nome:** Dê um nome claro (Ex: "Abertura", "Palestra Principal").
-    * **Duração:** Informe o tempo (Ex: `5:00` para 5 min, `1:30:00` para 1h30, `90s` para 90 seg, `15m` para 15 min).
+    * **Duração:** Informe o tempo (Ex: `5:00` para 5 min, `1:30:00` para 1h30, `90s` para 90 seg).
     * Clique em `Adicionar Bloco`. Repita para todos os temas.
 4.  **Execute o Evento:**
     * Encontre o primeiro bloco na lista "Blocos do Evento".
@@ -33,7 +33,7 @@ O Mestari é um aplicativo que te ajuda a organizar e manter sua reunião ou eve
 ### Perguntas Frequentes (FAQ)
 
 * **Como formato a Duração ao adicionar um bloco?**
-    * Você pode usar segundos (`90s`), minutos (`15m`), horas (`1h`), ou combinações como `MM:SS` (ex: `05:30`), `HH:MM:SS` (ex: `01:20:00`).
+    * Você pode usar segundos (`90s`) ou combinações como `MM:SS` (ex: `05:30`), `HH:MM:SS` (ex: `01:20:00`).
 * **Onde meus eventos ficam salvos? Preciso de conta?**
     * Não precisa de conta! Seus dados (nome do evento, blocos, tempos, notas) são salvos **automaticamente e apenas no seu navegador** (`localStorage`). Se você limpar os dados do navegador para este site, o evento será perdido. Use `Salvar evento` para guardar um backup em arquivo.
 * **Qual a diferença entre `Resetar Evento` e o botão `Resetar Bloco` (🔄)?**
@@ -56,7 +56,7 @@ Mestari is an app that helps you organize and keep your meeting or event on sche
 2.  **Name Your Event:** Click the pencil icon (✏️) next to "Event Name"  to set it.
 3.  **Add Blocks:** Use the "Add New Block" section to insert your agenda items.
     * **Name:** Give it a clear name (e.g., "Opening", "Main Talk").
-    * **Duration:** Enter the time (e.g., `5:00` for 5 min, `1:30:00` for 1h30, `90s` for 90 sec, `15m` for 15 min).
+    * **Duration:** Enter the time (e.g., `5:00` for 5 min, `1:30:00` for 1h30, `90s` for 90 sec).
     * Click `Add Block`. Repeat for all items.
 4.  **Run the Event:**
     * Find the first block in the "Event Blocks" list.
@@ -72,7 +72,7 @@ Mestari is an app that helps you organize and keep your meeting or event on sche
 ### Frequently Asked Questions (FAQ)
 
 * **How do I format the Duration when adding a block?**
-    * You can use seconds (`90s`), minutes (`15m`), hours (`1h`), or combinations like `MM:SS` (e.g., `05:30`), `HH:MM:SS` (e.g., `01:20:00`).
+    * You can use seconds (`90s`) or combinations like `MM:SS` (e.g., `05:30`), `HH:MM:SS` (e.g., `01:20:00`).
 * **Where is my event data saved? Do I need an account?**
     * No account needed! Your data (event name, blocks, times, notes) is saved **automatically and only in your browser** (`localStorage`). If you clear your browser data for this site, the event will be lost. Use `Save Event`  to keep a file backup.
 * **What's the difference between `Resetar Evento` and the `Reset Block` button (🔄)?**
