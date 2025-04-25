@@ -867,13 +867,17 @@ function toggleTheme() { isDarkMode.value = !isDarkMode.value; }
       </div>
       <div class="footer-center">
          <p class="footer-about-text">{{ translations.footer.aboutText1 }}</p>
+         <br>
         <p class="footer-copyright">
           <span>&copy; {{ new Date().getFullYear() }} Rickfre</span> |
            <a href="/LICENSE.txt" target="_blank" rel="noopener noreferrer">{{ translations.footer.licenseLink }}</a>
+           | <a href="https://rickfre.com.br/#licences-and-terms" target="_blank" rel="noopener noreferrer">{{ translations.footer.termsLink }}</a>
            <br>
+           <br> <a href="https://github.com/rickfre10/mestari/blob/main/README.md" target="_blank" rel="noopener noreferrer">{{ translations.footer.faqLink }}</a>
+            <br>
             <br><span>{{ translations.footer.privacyNote }}</span> 
             <br>
-            <br><span> Version 2.0200 </span> </p>
+            <br><span> Version 2.0213 </span> </p>
       </div>
       <nav class="footer-right">
          <span>{{ translations.footer.madeByPrefix }}</span>
