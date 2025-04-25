@@ -3,6 +3,7 @@
 **(Experimente agora / Try it now):**
 ➡️ **https://mestari.rickfre.com.br/** ⬅️
 
+([Read in English below](#en-about-mestari))
 ---
 
 ## [PT-BR] Sobre o Mestari
@@ -86,6 +87,7 @@ Mestari is an app that helps you organize and keep your meeting or event on sche
 ## Em breve/ Soon:
 
 Estamos trabalhando no Developer Guide, em breve estará disponível aqui. 
+
 We are working in the Developer Guide, coming soon in this section. 
 
 ---
