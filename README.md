@@ -3,10 +3,11 @@
 **(Experimente agora / Try it now):**
 ➡️ **https://mestari.rickfre.com.br/** ⬅️
 
-([Read in English below](#en-about-mestari))
 ---
 
 ## [PT-BR] Sobre o Mestari
+
+([Read in English below](#en-about-mestari))
 
 O Mestari é um aplicativo que te ajuda a organizar e manter sua reunião ou evento dentro do cronograma! Você pode criar vários blocos de pauta, definir um tempo máximo para cada um e registrar os pontos-chave do seu discurso e anotações. É ideal para controlar eventos, palestras e apresentações ao vivo.
 
